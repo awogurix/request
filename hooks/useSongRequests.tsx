@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { SongRequest } from '../types';
-// firebase.tsからdbとfirestoreの両方をインポートするように変更し、モジュールの重複読み込みを解消します。
-import { db, firestore } from '../firebase';
+// firebase.tsからdb、firestore、および新しい初期化エラー変数をインポートします。
+import { db, firestore, firebaseInitializationError } from '../firebase';
 
 // FirestoreからのデータはtimestampがFirebaseのTimestampオブジェクトになるため、
 // アプリケーション内で使いやすいようにstringに変換する前の型を定義
@@ -22,9 +22,6 @@ interface RequestContextType {
 // コンテキストの作成
 const RequestContext = createContext<RequestContextType | undefined>(undefined);
 
-// Firestoreの'songRequests'コレクションへの参照
-const requestsCollectionRef = firestore.collection(db, 'songRequests');
-
 // コンテキストプロバイダーの作成
 export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<SongRequest[]>([]);
@@ -33,6 +30,22 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // 初回マウント時にFirestoreからデータをリアルタイムで購読する
   useEffect(() => {
+    // まず、firebase.tsからの初期化エラーを確認します。
+    if (firebaseInitializationError) {
+      setError(firebaseInitializationError);
+      setLoading(false);
+      return;
+    }
+    
+    // dbがnullの場合（初期化に失敗した場合）、エラーを設定して処理を中断します。
+    if (!db) {
+        setError("Firestoreデータベースに接続できません。firebase.tsの設定を確認してください。");
+        setLoading(false);
+        return;
+    }
+
+    // Firestoreの'songRequests'コレクションへの参照
+    const requestsCollectionRef = firestore.collection(db, 'songRequests');
     // タイムスタンプの降順でデータをクエリ
     const q = firestore.query(requestsCollectionRef, firestore.orderBy('timestamp', 'desc'));
 
@@ -67,6 +80,10 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // 新しいリクエストをFirestoreに追加する関数
   const addRequest = useCallback(async (requestData: Omit<SongRequest, 'id' | 'timestamp' | 'isRead'>) => {
+    if (!db) {
+      throw new Error("データベースに接続されていません。");
+    }
+    const requestsCollectionRef = firestore.collection(db, 'songRequests');
     try {
       await firestore.addDoc(requestsCollectionRef, {
         ...requestData,
@@ -81,6 +98,9 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // リクエストの既読/未読ステータスをFirestoreで更新する関数
   const updateRequestStatus = useCallback(async (id: string, isRead: boolean) => {
+    if (!db) {
+      throw new Error("データベースに接続されていません。");
+    }
     try {
       const requestDoc = firestore.doc(db, 'songRequests', id);
       await firestore.updateDoc(requestDoc, { isRead });
@@ -92,10 +112,12 @@ export const RequestProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // リクエストをFirestoreから削除する関数
   const deleteRequest = useCallback(async (id: string) => {
+    if (!db) {
+      throw new Error("データベースに接続されていません。");
+    }
     try {
       const requestDoc = firestore.doc(db, 'songRequests', id);
       await firestore.deleteDoc(requestDoc);
-    // Fix: The catch block was missing curly braces, which is a syntax error.
     } catch (error) {
       console.error("リクエストの削除に失敗しました:", error);
       throw new Error("リクエストの削除に失敗しました。");

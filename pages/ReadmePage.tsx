@@ -54,7 +54,18 @@ const ReadmePage: React.FC = () => {
                     <li>次に、プロジェクトの概要ページの歯車アイコン &gt;「プロジェクトの設定」に進みます。</li>
                     <li>「マイアプリ」セクションで、ウェブアプリのアイコン (<code>&lt;/&gt;</code>) をクリックして新しいウェブアプリを登録します。</li>
                     <li>アプリのニックネームを登録後、「アプリを登録」をクリックすると <code>firebaseConfig</code> というオブジェクトが表示されます。<strong>この内容は次のステップで必要になるので、必ずコピーしてください。</strong></li>
-                    <li>プロジェクト内に <code>firebase.ts</code> というファイルを作成し、以下の内容を貼り付け、<code>firebaseConfig</code> の部分をコピーしたものに置き換えます。
+                    <li>
+                        プロジェクト内の <code>firebase.ts</code> というファイルを開き、<code>firebaseConfig</code> の部分をステップ7でコピーしたものに完全に置き換えます。
+                        <div className="my-4 p-6 bg-red-100 border-l-8 border-red-600 text-red-900">
+                            <p className="text-xl font-extrabold">🚨【最重要警告】この設定は必須です！ 🚨</p>
+                            <p className="mt-2">
+                                現在表示されているエラーメッセージ <strong>「Firebase設定が更新されていません」</strong> は、このステップが完了していないことが直接の原因です。
+                            </p>
+                            <p className="mt-2">
+                                下のコードブロックの <code>firebaseConfig</code> オブジェクトは、<strong>必ずご自身のFirebaseプロジェクトからコピーしたものに完全に置き換えてください。</strong>
+                                この部分を置き換えない限り、アプリケーションは絶対に動作しません。
+                            </p>
+                        </div>
                         <CodeBlock>{`import * as firebaseApp from "firebase/app";
 import * as firestore from "firebase/firestore";
 
@@ -69,9 +80,24 @@ const firebaseConfig = {
 };
 // ▲▲▲▲▲ ここまで ▲▲▲▲▲
 
+// 以下は編集不要です
 const app = firebaseApp.initializeApp(firebaseConfig);
 export const db = firestore.getFirestore(app);
 export { firestore };`}</CodeBlock>
+                        <div className="mt-4 p-4 border-2 border-dashed border-gray-400 rounded-lg bg-gray-50">
+                            <h4 className="text-lg font-semibold text-center text-gray-700">【コピー＆ペーストのイメージ】</h4>
+                            <div className="text-center my-2 font-mono">
+                                <div className="inline-block p-4 bg-blue-100 border border-blue-300 rounded">
+                                    Firebaseコンソール画面<br/>
+                                    (コピー元の<code>firebaseConfig</code>)
+                                </div>
+                                <div className="text-2xl font-bold text-blue-500 mx-4 inline-block align-middle">→</div>
+                                <div className="inline-block p-4 bg-green-100 border border-green-300 rounded">
+                                    <code>firebase.ts</code> ファイル内<br/>
+                                    (貼り付け先の<code>firebaseConfig</code>)
+                                </div>
+                            </div>
+                        </div>
                     </li>
                     <li>Firebaseコンソールの「Firestore Database」ページに戻り、「ルール」タブをクリックし、エディタの内容を以下のルールに完全に置き換えて「<strong>公開</strong>」をクリックします。
                         <CodeBlock>{`rules_version = '2';
@@ -130,18 +156,17 @@ service cloud.firestore {
         <h2 className="text-2xl font-semibold mb-2 text-red-600">4. トラブルシューティング</h2>
         <div className="space-y-6">
             <div className="bg-gray-50 p-6 rounded-lg border">
-              <h3 className="text-xl font-semibold text-gray-800">エラー: "Firestoreからのデータ読み込みに失敗しました: Missing or insufficient permissions."</h3>
+              <h3 className="text-xl font-semibold text-gray-800">エラー: "Firebase設定が更新されていません..." または "Firestoreからのデータ読み込みに失敗しました..."</h3>
               <p className="text-gray-700 mt-2">
-                これは、Firestoreのセキュリティルールが正しく設定されていないことが原因です。上記「<strong>パートA: バックエンドの設定</strong>」の手順に戻り、ルールを正しく設定し、「<strong>公開</strong>」ボタンを押し忘れていないか再度確認してください。
+                これは、<code>firebase.ts</code>の<code>firebaseConfig</code>が正しく設定されていないことが原因です。上記「<strong>パートAのステップ8</strong>」に戻り、Firebaseコンソールからコピーしたご自身の<code>firebaseConfig</code>に正しく置き換えられているか、再度、注意深く確認してください。
               </p>
             </div>
             <div className="bg-gray-50 p-6 rounded-lg border">
               <h3 className="text-xl font-semibold text-gray-800">問題: デプロイ後、ページが真っ白になる、または「404 Not Found」と表示される</h3>
               <p className="text-gray-700 mt-2">
-                これは、ファイルの読み込みパスやルーティングに問題がある可能性があります。
+                <code>firebase.ts</code>の設定が間違っている場合、ページが真っ白になることがあります。まずは上記のエラー解決策を確認してください。それでも解決しない場合は、以下の点を確認してください。
               </p>
-               <p className="text-gray-700 mt-2 font-bold">解決策:</p>
-                <ul className="list-disc list-inside ml-6 mt-1 text-sm space-y-1">
+               <ul className="list-disc list-inside ml-6 mt-2 text-sm space-y-1">
                   <li><code>index.html</code> の <code>&lt;script src="./index.tsx"&gt;</code> のパスが <code>./</code> から始まっていることを確認してください。</li>
                   <li>ブラウザの開発者ツール（F12キーで開けます）の「コンソール」タブに、何か赤いエラーメッセージが表示されていないか確認してください。</li>
                   <li>GitHub Pagesの設定で、正しいブランチが選択されているか確認してください。</li>
