@@ -9,13 +9,13 @@ const CodeBlock: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const ReadmePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-lg border">
-      <h1 className="text-4xl font-bold mb-4 text-gray-800 border-b-2 pb-2">ラジオ曲リクエストアプリ (Firebase版) README</h1>
+      <h1 className="text-4xl font-bold mb-4 text-gray-800 border-b-2 pb-2">ラジオ曲リクエストアプリ (GitHub Pages版) README</h1>
 
       <section className="mb-8">
         <h2 className="text-2xl font-semibold mb-2 text-radio-blue">1. アプリケーション概要</h2>
         <p className="text-gray-700">
           このアプリケーションは、ラジオ番組のリスナーが曲のリクエストを送信し、そのリクエストをリアルタイムで共有・管理できるWebアプリケーションです。
-          データの保存先としてFirebase Firestoreを使用しており、複数人での利用が可能です。
+          データの保存先としてFirebase Firestoreを、ホスティング先としてGitHub Pagesを使用しています。
         </p>
       </section>
 
@@ -24,8 +24,8 @@ const ReadmePage: React.FC = () => {
         <ul className="list-disc list-inside space-y-2 text-gray-700">
           <li><strong>フロントエンド:</strong> React, TypeScript</li>
           <li><strong>スタイリング:</strong> Tailwind CSS</li>
-          <li><strong>データ永続化:</strong> Firebase Firestore (リアルタイムデータベース)</li>
-          <li><strong>ホスティング:</strong> Firebase Hosting</li>
+          <li><strong>データ永続化 (バックエンド):</strong> Firebase Firestore</li>
+          <li><strong>ホスティング:</strong> GitHub Pages</li>
         </ul>
       </section>
       
@@ -42,25 +42,20 @@ const ReadmePage: React.FC = () => {
 
         <div className="space-y-8 mt-6">
             <div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">ステップ1: Firebaseプロジェクトの作成と設定</h3>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">パートA: バックエンドの設定 (Firebase)</h3>
+                <p className="text-gray-600 mb-4">
+                  アプリのデータ（曲のリクエストなど）を保存するためにFirebaseを設定します。これはホスティングとは別の、データベース側の設定です。
+                </p>
                 <ol className="list-decimal list-inside space-y-2 pl-4 text-gray-700">
                     <li><a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Firebaseコンソール</a>にアクセスし、Googleアカウントでログインします。</li>
                     <li>「プロジェクトを追加」をクリックし、新しいFirebaseプロジェクトを作成します。</li>
                     <li>プロジェクトダッシュボードの左側メニューから「ビルド」&gt;「Firestore Database」を選択します。</li>
-                    <li>「データベースの作成」をクリックし、「<strong>本番環境モードで開始</strong>」を選択してデータベースを有効にします。(セキュリティルールは次のステップで設定します)</li>
+                    <li>「データベースの作成」をクリックし、「<strong>本番環境モードで開始</strong>」を選択してデータベースを有効にします。</li>
                     <li>次に、プロジェクトの概要ページの歯車アイコン &gt;「プロジェクトの設定」に進みます。</li>
                     <li>「マイアプリ」セクションで、ウェブアプリのアイコン (<code>&lt;/&gt;</code>) をクリックして新しいウェブアプリを登録します。</li>
-                    <li>アプリのニックネームを登録後、「アプリを登録」をクリックすると <code>firebaseConfig</code> というオブジェクトが表示されます。<strong>この内容はステップ2で必要になるので、必ずコピーしてください。</strong></li>
-                </ol>
-            </div>
-
-            <div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">ステップ2: アプリケーションの設定ファイル作成</h3>
-              <ol className="list-decimal list-inside space-y-2 pl-4 text-gray-700">
-                  <li>プロジェクト内に <code>firebase.ts</code> という名前のファイルを作成します。(もし既にあれば、そのファイルを編集します)</li>
-                  <li>以下の内容を <code>firebase.ts</code> に貼り付け、<code>firebaseConfig</code> オブジェクトの部分を、<strong>ステップ1でコピーしたものに完全に置き換えます。</strong></li>
-              </ol>
-              <CodeBlock>{`import * as firebaseApp from "firebase/app";
+                    <li>アプリのニックネームを登録後、「アプリを登録」をクリックすると <code>firebaseConfig</code> というオブジェクトが表示されます。<strong>この内容は次のステップで必要になるので、必ずコピーしてください。</strong></li>
+                    <li>プロジェクト内に <code>firebase.ts</code> というファイルを作成し、以下の内容を貼り付け、<code>firebaseConfig</code> の部分をコピーしたものに置き換えます。
+                        <CodeBlock>{`import * as firebaseApp from "firebase/app";
 import * as firestore from "firebase/firestore";
 
 // ▼▼▼▼▼ このfirebaseConfigの部分を、ご自身のFirebaseプロジェクトのものに置き換えてください ▼▼▼▼▼
@@ -75,114 +70,56 @@ const firebaseConfig = {
 // ▲▲▲▲▲ ここまで ▲▲▲▲▲
 
 const app = firebaseApp.initializeApp(firebaseConfig);
-export const db = firestore.getFirestore(app);`}</CodeBlock>
-            </div>
-            
-            <div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">ステップ3: Firestoreセキュリティルールの設定 (エラー最頻出箇所)</h3>
-              <p className="text-gray-700 mb-2">
-                「本番環境モード」では、初期設定ですべてのデータベースアクセスがブロックされます。このままではアプリがデータを読み書きできず、「Missing or insufficient permissions」エラーが必ず発生します。
-              </p>
-              <ol className="list-decimal list-inside space-y-2 pl-4 text-gray-700">
-                <li>Firebaseコンソールの「Firestore Database」ページに戻り、「ルール」タブをクリックします。</li>
-                <li>エディタに表示されている内容を、<strong>以下のルールに完全に置き換えます。</strong></li>
-              </ol>
-              <CodeBlock>{`rules_version = '2';
+export const db = firestore.getFirestore(app);
+export { firestore };`}</CodeBlock>
+                    </li>
+                    <li>Firebaseコンソールの「Firestore Database」ページに戻り、「ルール」タブをクリックし、エディタの内容を以下のルールに完全に置き換えて「<strong>公開</strong>」をクリックします。
+                        <CodeBlock>{`rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // songRequestsコレクションへのアクセスを許可します。
     match /songRequests/{requestId} {
-      // 誰でもリクエストの読み取り、作成、更新、削除が可能です。
-      // これによりアプリケーションが正常に動作しますが、
-      // 本番環境ではより厳格なルールを設定することを強く推奨します。
       allow read, write: if true;
     }
   }
 }`}</CodeBlock>
-              <ol className="list-decimal list-inside space-y-2 pl-4 text-gray-700" start={3}>
-                <li>「<strong className="text-blue-600">公開</strong>」ボタンをクリックして、新しいルールを保存します。</li>
-              </ol>
+                    </li>
+                </ol>
             </div>
             
             <div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2 border-t-2 pt-4 mt-8">🚨 ステップ4: Firebaseへのデプロイ (最重要) 🚨</h3>
-              <p className="text-gray-700 mb-4">
-                ここが最もエラーの発生しやすいステップです。以下の手順を正確に実行してください。
-              </p>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2 border-t-2 pt-6 mt-8">パートB: フロントエンドのデプロイ (GitHub Pages)</h3>
+               <p className="text-gray-600 mb-4">
+                  作成したアプリケーションを、GitHub Pagesを使ってインターネット上に公開します。
+                </p>
               <ol className="list-decimal list-inside space-y-4 pl-4 text-gray-700">
                 <li>
-                  <strong>4.1: Firebase CLIのインストールとログイン</strong><br/>
-                  ターミナル（コマンドプロンプト）を開き、以下のコマンドを実行します。
-                  <CodeBlock>npm install -g firebase-tools{"\n"}firebase login</CodeBlock>
-                  <p className="text-sm text-gray-600">既にインストール・ログイン済みの場合はこの手順をスキップできます。</p>
+                  <strong>ステップ1: GitHubリポジトリの作成とプッシュ</strong><br/>
+                  <p>GitHub上で新しいリポジトリを作成し、このアプリケーションのコード全体をプッシュします。</p>
                 </li>
                 <li>
-                  <strong className="text-red-600">4.2: 【重要】プロジェクトの紐付け</strong><br/>
-                  <p className="mb-2">このプロジェクトには、正しいデプロイ設定が書かれた <code>firebase.json</code> が既に含まれています。
-                  そのため、<strong className="font-bold"><code>firebase init</code> コマンドは絶対に実行しないでください。</strong>実行すると設定が上書きされ、エラーの原因になります。</p>
-                  以下のコマンドを実行して、このプロジェクトとあなたのFirebaseプロジェクトを紐付けます。
-                  <CodeBlock>firebase use --add</CodeBlock>
-                  <ul className="list-disc list-inside ml-6 mt-1 text-sm space-y-1">
-                      <li>表示されたプロジェクト一覧から、キーボードの矢印キーでステップ1で作成したプロジェクトを選択し、Enterキーを押します。</li>
-                      <li>次に「What alias do you want to use for this project?」と尋ねられます。これは設定に付ける名前（エイリアス）です。 <br/><strong className="text-blue-600"><code>default</code> と入力してEnterキーを押してください。</strong></li>
+                  <strong>ステップ2: GitHub Pagesの設定</strong><br/>
+                  <ul className="list-disc list-inside ml-6 mt-1 space-y-1">
+                      <li>コードをプッシュしたリポジトリのページで、「Settings」タブに移動します。</li>
+                      <li>左側のメニューから「Pages」を選択します。</li>
+                      <li>「Build and deployment」の「Source」で、「Deploy from a branch」を選択します。</li>
+                      <li>「Branch」セクションで、公開したいブランチ（例: <code>main</code> または <code>master</code>）を選択し、フォルダは「<code>/(root)</code>」のままにして「Save」をクリックします。</li>
                   </ul>
                 </li>
                 <li>
-                  <strong>4.3: 設定ファイルの最終確認</strong><br/>
-                  <p>デプロイする前に、以下の2つのファイルがプロジェクトのルートに正しく存在することを確認してください。</p>
-                  <ul className="list-disc list-inside ml-6 mt-2 text-sm space-y-2">
-                    <li>
-                      <strong><code>.firebaserc</code></strong>: ステップ4.2で自動生成されたファイルです。中身は <code>{`{ "projects": { "default": "あなたのプロジェクトID" } }`}</code> のようになっています。
-                    </li>
-                    <li>
-                      <strong><code>firebase.json</code></strong>: プロジェクトに最初から含まれているファイルです。内容が<strong>以下のものと完全に一致しているか</strong>、必ず確認してください。
-                      <CodeBlock>{`{
-  "hosting": {
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
-}`}</CodeBlock>
-                    </li>
-                  </ul>
-                </li>
-                <li>
-                    <strong>4.4: デプロイの実行</strong><br/>
-                    準備が整いました。以下のコマンドでデプロイを実行します。
-                    <CodeBlock>firebase deploy</CodeBlock>
-                    <p className="text-sm text-gray-600">
-                      デプロイ時に「found XXXX files in .」と表示されるファイル数が、数百程度であれば正常です。もし数万〜数十万になっている場合は、<code>firebase.json</code>の設定が間違っているため、ステップ4.3を再確認してください。
+                    <strong>ステップ3: デプロイ完了とURLの確認</strong><br/>
+                    <p>
+                      設定を保存後、ページの上部に「Your site is live at ...」というメッセージが表示されるまで数分待ちます。
                     </p>
-                </li>
-                <li>
-                  <strong>4.5: デプロイ完了とURLの確認</strong><br/>
-                  <p>
-                    "✔ Deploy complete!" と表示されれば成功です！ターミナルに以下のような情報が表示されます。
-                  </p>
-                  <div className="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 my-2">
-                    <p className="font-bold">
-                      「<strong className="text-black">Hosting URL:</strong>」の後に表示される <code className="text-blue-700 underline">https://...</code> が、あなたのアプリケーションの公開URLです。
-                    </p>
-                  </div>
-                  <p>
-                    成功時の表示例:
-                  </p>
-                  <CodeBlock>{`✔  Deploy complete!
-
-Project Console: https://console.firebase.google.com/project/your-project-id/overview
-Hosting URL: https://your-project-id.web.app`}</CodeBlock>
-                   <p className="text-sm text-gray-600">
-                      この "Hosting URL" にアクセスして、デプロイされたアプリを確認してください。
-                    </p>
+                    <div className="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 my-2">
+                       <p className="font-bold">
+                        表示されたURLが、あなたのアプリケーションの公開URLです。
+                      </p>
+                    </div>
+                    <p>URLの形式:</p>
+                    <CodeBlock>https://&lt;あなたのユーザー名&gt;.github.io/&lt;リポジトリ名&gt;/</CodeBlock>
+                     <p className="text-sm text-gray-600">
+                       このURLにアクセスして、デプロイされたアプリを確認してください。
+                      </p>
                 </li>
               </ol>
             </div>
@@ -190,25 +127,25 @@ Hosting URL: https://your-project-id.web.app`}</CodeBlock>
       </section>
 
       <section className="mb-6">
-        <h2 className="text-2xl font-semibold mb-2 text-red-600">5. トラブルシューティング</h2>
+        <h2 className="text-2xl font-semibold mb-2 text-red-600">4. トラブルシューティング</h2>
         <div className="space-y-6">
-            <div className="bg-gray-50 p-6 rounded-lg border">
-                <h3 className="text-xl font-semibold text-gray-800">エラー: "firebase deploy" 時に "An unexpected error has occurred" が発生する</h3>
-                <p className="text-gray-700 mt-2">
-                    これは、デプロイ設定が間違っており、不要なファイル（特に<code>node_modules</code>フォルダ）までアップロードしようとしていることが原因です。
-                </p>
-                <p className="text-gray-700 mt-2 font-bold">解決策:</p>
-                <p className="text-gray-700 mt-1">
-                  このエラーは、おそらく誤って <code>firebase init</code> を実行し、<code>firebase.json</code> の内容を上書きしてしまったために発生しています。
-                  上記「<strong>ステップ4.3: 設定ファイルの最終確認</strong>」の指示に従って、<code>firebase.json</code> の内容を正しいものに修正してから、再度デプロイしてください。
-                </p>
-            </div>
-            
             <div className="bg-gray-50 p-6 rounded-lg border">
               <h3 className="text-xl font-semibold text-gray-800">エラー: "Firestoreからのデータ読み込みに失敗しました: Missing or insufficient permissions."</h3>
               <p className="text-gray-700 mt-2">
-                これは、Firestoreのセキュリティルールが正しく設定されていないことが原因です。上記「<strong>ステップ3: Firestoreセキュリティルールの設定</strong>」に戻り、手順を正確に実行したか再度確認してください。特に、ルールを貼り付けた後に「<strong>公開</strong>」ボタンを押し忘れていないか注意してください。
+                これは、Firestoreのセキュリティルールが正しく設定されていないことが原因です。上記「<strong>パートA: バックエンドの設定</strong>」の手順に戻り、ルールを正しく設定し、「<strong>公開</strong>」ボタンを押し忘れていないか再度確認してください。
               </p>
+            </div>
+            <div className="bg-gray-50 p-6 rounded-lg border">
+              <h3 className="text-xl font-semibold text-gray-800">問題: デプロイ後、ページが真っ白になる、または「404 Not Found」と表示される</h3>
+              <p className="text-gray-700 mt-2">
+                これは、ファイルの読み込みパスやルーティングに問題がある可能性があります。
+              </p>
+               <p className="text-gray-700 mt-2 font-bold">解決策:</p>
+                <ul className="list-disc list-inside ml-6 mt-1 text-sm space-y-1">
+                  <li><code>index.html</code> の <code>&lt;script src="./index.tsx"&gt;</code> のパスが <code>./</code> から始まっていることを確認してください。</li>
+                  <li>ブラウザの開発者ツール（F12キーで開けます）の「コンソール」タブに、何か赤いエラーメッセージが表示されていないか確認してください。</li>
+                  <li>GitHub Pagesの設定で、正しいブランチが選択されているか確認してください。</li>
+                </ul>
             </div>
         </div>
       </section>
