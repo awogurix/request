@@ -1,10 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { SongRequest } from '../types';
-import { db } from '../firebase'; // Firebase設定をインポート
-// Fix: All named imports from 'firebase/firestore' were failing.
-// Changed to a namespace import to resolve the module resolution issue,
-// consistent with the fix in firebase.ts.
-import * as firestore from 'firebase/firestore';
+// firebase.tsからdbとfirestoreの両方をインポートするように変更し、モジュールの重複読み込みを解消します。
+import { db, firestore } from '../firebase';
 
 // FirestoreからのデータはtimestampがFirebaseのTimestampオブジェクトになるため、
 // アプリケーション内で使いやすいようにstringに変換する前の型を定義

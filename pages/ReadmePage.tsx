@@ -160,8 +160,28 @@ service cloud.firestore {
                     準備が整いました。以下のコマンドでデプロイを実行します。
                     <CodeBlock>firebase deploy</CodeBlock>
                     <p className="text-sm text-gray-600">
-                      デプロイ時に「found XXXX files in .」と表示されるファイル数が、数百程度であれば正常です。もし数万〜数十万になっている場合は、<code>firebase.json</code>の設定が間違っているため、ステップ4.3を再確認してください。<br/>
-                      "Deploy complete!" と表示されれば成功です！Hosting URLにアクセスしてアプリを確認できます。
+                      デプロイ時に「found XXXX files in .」と表示されるファイル数が、数百程度であれば正常です。もし数万〜数十万になっている場合は、<code>firebase.json</code>の設定が間違っているため、ステップ4.3を再確認してください。
+                    </p>
+                </li>
+                <li>
+                  <strong>4.5: デプロイ完了とURLの確認</strong><br/>
+                  <p>
+                    "✔ Deploy complete!" と表示されれば成功です！ターミナルに以下のような情報が表示されます。
+                  </p>
+                  <div className="bg-green-100 border-l-4 border-green-500 text-green-800 p-4 my-2">
+                    <p className="font-bold">
+                      「<strong className="text-black">Hosting URL:</strong>」の後に表示される <code className="text-blue-700 underline">https://...</code> が、あなたのアプリケーションの公開URLです。
+                    </p>
+                  </div>
+                  <p>
+                    成功時の表示例:
+                  </p>
+                  <CodeBlock>{`✔  Deploy complete!
+
+Project Console: https://console.firebase.google.com/project/your-project-id/overview
+Hosting URL: https://your-project-id.web.app`}</CodeBlock>
+                   <p className="text-sm text-gray-600">
+                      この "Hosting URL" にアクセスして、デプロイされたアプリを確認してください。
                     </p>
                 </li>
               </ol>

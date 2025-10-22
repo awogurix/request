@@ -21,5 +21,8 @@ const firebaseConfig = {
 // Firebaseアプリを初期化
 const app = firebaseApp.initializeApp(firebaseConfig);
 
-// Firestoreデータベースのインスタンスを取得してエクスポート
+// Firestoreデータベースのインスタンスを取得
 export const db = firestore.getFirestore(app);
+
+// 他のファイルで一貫したfirestoreインスタンスを使用できるように、名前空間もエクスポートします
+export { firestore };
