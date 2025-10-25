@@ -617,6 +617,44 @@ body {
   color: var(--text-light);
 }
 
+/* 選曲済みバッジ */
+.selected-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 12px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* 選曲済みアイテム */
+.admin-request-item.selected {
+  background: #f1f8f4;
+  border-left: 4px solid #4CAF50;
+}
+
+/* 選曲ボタン */
+.btn-select {
+  background: #4CAF50;
+  color: white;
+}
+
+.btn-select:hover {
+  background: #45a049;
+}
+
+.btn-unselect {
+  background: #9E9E9E;
+  color: white;
+}
+
+.btn-unselect:hover {
+  background: #757575;
+}
+
 /* 情報カード */
 .info-card {
   background: var(--bg-white);

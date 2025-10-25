@@ -139,15 +139,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const formattedDate = `${createdDate.getFullYear()}/${String(createdDate.getMonth() + 1).padStart(2, '0')}/${String(createdDate.getDate()).padStart(2, '0')} ${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}`;
 
         return `
-          <div class="admin-request-item ${request.is_read ? '' : 'unread'}" data-id="${request.id}">
+          <div class="admin-request-item ${request.is_read ? 'selected' : ''}" data-id="${request.id}">
             <div class="admin-request-header">
               <div class="admin-request-info">
-                <div class="admin-request-song">${escapeHtml(request.song_name)}</div>
+                <div class="admin-request-song">
+                  ${request.is_read ? '<span class="selected-badge">✓ 選曲済</span> ' : ''}
+                  ${escapeHtml(request.song_name)}
+                </div>
                 <div class="admin-request-artist">${escapeHtml(request.artist_name)}</div>
               </div>
               <div class="admin-request-actions">
-                <button class="btn btn-small ${request.is_read ? 'btn-unread' : 'btn-read'}" onclick="toggleRead(${request.id}, ${request.is_read})">
-                  ${request.is_read ? '未読' : '既読'}
+                <button class="btn btn-small ${request.is_read ? 'btn-unselect' : 'btn-select'}" onclick="toggleRead(${request.id}, ${request.is_read})">
+                  ${request.is_read ? '選曲解除' : '選曲する'}
                 </button>
                 <button class="btn btn-small btn-delete" onclick="deleteRequest(${request.id})">削除</button>
               </div>

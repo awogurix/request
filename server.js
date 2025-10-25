@@ -262,7 +262,7 @@ app.get('/api/admin/requests', isAuthenticated, (req, res) => {
   });
 });
 
-// リクエストの既読/未読切り替え（管理者のみ）
+// 選曲状態の切り替え（管理者のみ）
 app.patch('/api/admin/requests/:id/read', isAuthenticated, (req, res) => {
   const { id } = req.params;
   const { is_read } = req.body;
