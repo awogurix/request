@@ -29,14 +29,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // リクエスト一覧を生成
       requestsList.innerHTML = requests.map(request => `
-        <div class="request-item">
+        <div class="request-item ${request.is_read ? 'selected' : ''}">
           <div class="request-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 18V5l12-2v13M6 14H4c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2zM18 16h-2c-1.1 0-2 .9-2 2v2c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-2c0-1.1-.9-2-2-2z"></path>
             </svg>
           </div>
           <div class="request-content">
-            <div class="request-song">${escapeHtml(request.song_name)}</div>
+            <div class="request-song">
+              ${request.is_read ? '<span class="selected-badge">✓ 選曲済</span>' : ''}
+              ${escapeHtml(request.song_name)}
+            </div>
             <div class="request-artist">${escapeHtml(request.artist_name)}</div>
             <div class="request-meta">
               <span class="request-time">${request.time}</span>

@@ -220,7 +220,7 @@ app.post('/api/requests', requestLimiter, (req, res) => {
 app.get('/api/requests/today', (req, res) => {
   const sql = `
     SELECT id, song_name, artist_name, nickname, 
-           strftime('%H:%M', created_at) as time
+           strftime('%H:%M', created_at) as time, is_read
     FROM requests 
     WHERE date(created_at) = date(datetime('now', '+9 hours'))
     ORDER BY created_at DESC
