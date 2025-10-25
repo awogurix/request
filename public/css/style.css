@@ -1429,3 +1429,16 @@ code {
     width: 100%;
   }
 }
+
+/* 管理画面のログイン保護 */
+#adminSection {
+  display: none !important;
+}
+
+body.admin-authenticated #loginSection {
+  display: none !important;
+}
+
+body.admin-authenticated #adminSection {
+  display: block !important;
+}

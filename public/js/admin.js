@@ -1,6 +1,9 @@
 // 管理画面のJavaScript
 
 document.addEventListener('DOMContentLoaded', () => {
+  // 初期状態では認証済みクラスを削除（セキュリティ）
+  document.body.classList.remove('admin-authenticated');
+  
   const loginSection = document.getElementById('loginSection');
   const adminSection = document.getElementById('adminSection');
   const loginForm = document.getElementById('loginForm');
@@ -42,12 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ログイン画面を表示
   function showLoginSection() {
+    document.body.classList.remove('admin-authenticated');
     loginSection.style.display = 'block';
     adminSection.style.display = 'none';
   }
 
   // 管理画面を表示
   function showAdminSection() {
+    document.body.classList.add('admin-authenticated');
     loginSection.style.display = 'none';
     adminSection.style.display = 'block';
     loadStats();
