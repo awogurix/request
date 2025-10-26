@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 受付状態の要素
   const statusBadge = document.getElementById('statusBadge');
   const toggleStatusBtn = document.getElementById('toggleStatusBtn');
-  let requestEnabled = true;
+  let requestStatus = '1'; // 0: 停止中, 1: 受付中, 2: 次回配信分、受付中
 
   // 認証状態をチェック
   async function checkAuth() {
@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const response = await fetch('/api/settings/request-status');
       const data = await response.json();
-      requestEnabled = data.enabled;
+      requestStatus = data.status || '1';
       updateStatusUI();
     } catch (error) {
       console.error('受付状態取得エラー:', error);
@@ -284,23 +284,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 受付状態UIを更新
   function updateStatusUI() {
-    if (requestEnabled) {
-      statusBadge.textContent = '受付中';
-      statusBadge.className = 'status-badge status-enabled';
-      toggleStatusBtn.textContent = '受付を停止する';
-      toggleStatusBtn.className = 'btn btn-secondary';
-    } else {
-      statusBadge.textContent = '停止中';
-      statusBadge.className = 'status-badge status-disabled';
-      toggleStatusBtn.textContent = '受付を再開する';
-      toggleStatusBtn.className = 'btn btn-primary';
-    }
+    const statusConfig = {
+      '0': {
+        text: '停止中',
+        className: 'status-badge status-disabled',
+        buttonText: '受付状態を変更'
+      },
+      '1': {
+        text: '受付中',
+        className: 'status-badge status-enabled',
+        buttonText: '受付状態を変更'
+      },
+      '2': {
+        text: '次回配信分、受付中',
+        className: 'status-badge status-next',
+        buttonText: '受付状態を変更'
+      }
+    };
+    
+    const config = statusConfig[requestStatus] || statusConfig['1'];
+    statusBadge.textContent = config.text;
+    statusBadge.className = config.className;
+    toggleStatusBtn.textContent = config.buttonText;
+    toggleStatusBtn.className = 'btn btn-primary';
   }
 
   // 受付状態切り替え
   if (toggleStatusBtn) {
     toggleStatusBtn.addEventListener('click', async () => {
-      if (!confirm(requestEnabled ? 'リクエストの受付を停止しますか？' : 'リクエストの受付を再開しますか？')) {
+      // 状態選択用のダイアログを表示
+      const statusOptions = [
+        { value: '0', label: '停止中' },
+        { value: '1', label: '受付中' },
+        { value: '2', label: '次回配信分、受付中' }
+      ];
+      
+      const currentStatusLabel = statusOptions.find(opt => opt.value === requestStatus)?.label || '受付中';
+      const message = `現在の状態: ${currentStatusLabel}\n\n変更したい状態を選択してください：\n0: 停止中\n1: 受付中\n2: 次回配信分、受付中`;
+      
+      const newStatus = prompt(message, requestStatus);
+      
+      if (newStatus === null || newStatus === requestStatus) {
+        return; // キャンセルまたは同じ状態
+      }
+      
+      if (!['0', '1', '2'].includes(newStatus)) {
+        alert('0、1、2のいずれかを入力してください');
         return;
       }
 
@@ -314,13 +343,13 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ enabled: !requestEnabled })
+          body: JSON.stringify({ status: newStatus })
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          requestEnabled = !requestEnabled;
+          requestStatus = newStatus;
           updateStatusUI();
           alert(data.message);
         } else {
@@ -331,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('ネットワークエラーが発生しました');
       } finally {
         toggleStatusBtn.disabled = false;
-        toggleStatusBtn.textContent = originalText;
+        updateStatusUI();
       }
     });
   }

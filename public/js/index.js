@@ -18,7 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/settings/request-status');
       const data = await response.json();
       
-      if (!data.enabled) {
+      // 0: 停止中, 1: 受付中, 2: 次回配信分、受付中
+      const status = data.status;
+      
+      if (status === '0') {
         // 受付停止中の場合
         // 大きな警告メッセージを表示
         closedNotice.style.display = 'flex';
@@ -39,6 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         // 受付中の場合は通常表示
         closedNotice.style.display = 'none';
+        
+        // タイトルを状態に応じて変更
+        if (status === '2') {
+          document.querySelector('.card-header h2').textContent = '次回配信分のリクエスト受付中';
+          document.querySelector('.card-header p').textContent = '次回の配信で流す曲をリクエストしてください。';
+        } else {
+          document.querySelector('.card-header h2').textContent = 'あなたのリクエストをお待ちしています';
+          document.querySelector('.card-header p').textContent = 'お好きな曲をリクエストしてください。番組でご紹介させていただきます。';
+        }
       }
     } catch (error) {
       console.error('受付状態確認エラー:', error);

@@ -952,6 +952,16 @@ code {
   animation: pulse 2s infinite;
 }
 
+.status-next {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-next::before {
+  background: #FF9800;
+  animation: pulse 2s infinite;
+}
+
 .status-disabled {
   background: #ffebee;
   color: #c62828;

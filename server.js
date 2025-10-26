@@ -72,7 +72,7 @@ function initDatabase() {
     
     // デフォルト設定を追加
     const defaultSettings = [
-      { key: 'request_enabled', value: '1' },
+      { key: 'request_enabled', value: '1' }, // 0: 停止中, 1: 受付中, 2: 次回配信分、受付中
       { key: 'next_theme', value: '' },
       { key: 'next_broadcast_time', value: '' }
     ];
@@ -172,7 +172,7 @@ function isAuthenticated(req, res, next) {
 app.post('/api/requests', requestLimiter, (req, res) => {
   // 受付状態チェック
   db.get('SELECT value FROM settings WHERE key = ?', ['request_enabled'], (err, row) => {
-    if (err || !row || row.value !== '1') {
+    if (err || !row || row.value === '0') {
       return res.status(503).json({ error: '現在、リクエストの受付を停止しています' });
     }
     
@@ -472,23 +472,36 @@ app.get('/api/settings/request-status', (req, res) => {
       console.error('データベースエラー:', err);
       return res.status(500).json({ error: 'データ取得に失敗しました' });
     }
-    res.json({ enabled: row && row.value === '1' });
+    // 0: 停止中, 1: 受付中, 2: 次回配信分、受付中
+    res.json({ status: row ? row.value : '0' });
   });
 });
 
 // 受付状態更新（管理者のみ）
 app.post('/api/admin/settings/request-status', isAuthenticated, (req, res) => {
-  const { enabled } = req.body;
-  const value = enabled ? '1' : '0';
+  const { status } = req.body;
+  // 0: 停止中, 1: 受付中, 2: 次回配信分、受付中
+  const value = String(status);
+  
+  if (!['0', '1', '2'].includes(value)) {
+    return res.status(400).json({ error: '無効な状態値です' });
+  }
   
   db.run('UPDATE settings SET value = ? WHERE key = ?', [value, 'request_enabled'], function(err) {
     if (err) {
       console.error('データベースエラー:', err);
       return res.status(500).json({ error: '更新に失敗しました' });
     }
+    
+    const messages = {
+      '0': 'リクエスト受付を停止しました',
+      '1': 'リクエスト受付を再開しました',
+      '2': '次回配信分のリクエスト受付を開始しました'
+    };
+    
     res.json({ 
       success: true,
-      message: enabled ? 'リクエスト受付を再開しました' : 'リクエスト受付を停止しました'
+      message: messages[value]
     });
   });
 });
