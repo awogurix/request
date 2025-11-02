@@ -115,23 +115,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ページネーション変数
+  let currentPage = 1;
+  const itemsPerPage = 20;
+  let currentDate = null;
+
   // リクエスト一覧を読み込み
-  async function loadRequests(date = null) {
+  async function loadRequests(date = null, page = 1) {
     try {
-      const url = date ? `/api/admin/requests?date=${date}` : '/api/admin/requests';
+      currentDate = date;
+      currentPage = page;
+      
+      let url = `/api/admin/requests?page=${page}&limit=${itemsPerPage}`;
+      if (date) {
+        url += `&date=${date}`;
+      }
+      
       const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('認証エラー');
       }
 
-      const requests = await response.json();
+      const data = await response.json();
+      const requests = data.requests;
+      const pagination = data.pagination;
 
       if (requests.length === 0) {
         adminRequestsList.style.display = 'none';
         noAdminRequests.style.display = 'flex';
         noAdminRequests.style.flexDirection = 'column';
         noAdminRequests.style.alignItems = 'center';
+        
+        // ページネーションも非表示
+        const paginationEl = document.getElementById('pagination');
+        if (paginationEl) paginationEl.style.display = 'none';
         return;
       }
 
@@ -184,6 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
       }).join('');
 
+      // ページネーションUIを生成
+      renderPagination(pagination);
+
     } catch (error) {
       console.error('リクエスト取得エラー:', error);
       
@@ -192,6 +213,74 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoginSection();
       }
     }
+  }
+
+  // ページネーションUIを生成
+  function renderPagination(pagination) {
+    let paginationEl = document.getElementById('pagination');
+    
+    if (!paginationEl) {
+      // ページネーション要素を作成
+      paginationEl = document.createElement('div');
+      paginationEl.id = 'pagination';
+      paginationEl.className = 'pagination';
+      adminRequestsList.parentNode.insertBefore(paginationEl, adminRequestsList.nextSibling);
+    }
+    
+    if (pagination.totalPages <= 1) {
+      paginationEl.style.display = 'none';
+      return;
+    }
+    
+    paginationEl.style.display = 'flex';
+    
+    let html = '<div class="pagination-info">';
+    html += `全${pagination.total}件中 ${((pagination.page - 1) * pagination.limit) + 1}-${Math.min(pagination.page * pagination.limit, pagination.total)}件を表示`;
+    html += '</div><div class="pagination-buttons">';
+    
+    // 前へボタン
+    if (pagination.page > 1) {
+      html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', ${pagination.page - 1})">« 前へ</button>`;
+    }
+    
+    // ページ番号
+    const maxButtons = 5;
+    let startPage = Math.max(1, pagination.page - Math.floor(maxButtons / 2));
+    let endPage = Math.min(pagination.totalPages, startPage + maxButtons - 1);
+    
+    if (endPage - startPage < maxButtons - 1) {
+      startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+    
+    if (startPage > 1) {
+      html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', 1)">1</button>`;
+      if (startPage > 2) {
+        html += '<span class="pagination-ellipsis">...</span>';
+      }
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      if (i === pagination.page) {
+        html += `<button class="btn btn-primary btn-sm" disabled>${i}</button>`;
+      } else {
+        html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', ${i})">${i}</button>`;
+      }
+    }
+    
+    if (endPage < pagination.totalPages) {
+      if (endPage < pagination.totalPages - 1) {
+        html += '<span class="pagination-ellipsis">...</span>';
+      }
+      html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', ${pagination.totalPages})">${pagination.totalPages}</button>`;
+    }
+    
+    // 次へボタン
+    if (pagination.page < pagination.totalPages) {
+      html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', ${pagination.page + 1})">次へ »</button>`;
+    }
+    
+    html += '</div>';
+    paginationEl.innerHTML = html;
   }
 
   // 既読/未読切り替え
@@ -207,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response.ok) {
         loadStats();
-        loadRequests(dateFilter.value || null);
+        loadRequests(currentDate, currentPage);
       }
     } catch (error) {
       console.error('既読切り替えエラー:', error);
@@ -227,7 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response.ok) {
         loadStats();
-        loadRequests(dateFilter.value || null);
+        loadRequests(currentDate, currentPage);
       }
     } catch (error) {
       console.error('削除エラー:', error);
@@ -248,13 +337,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 日付フィルター
   dateFilter.addEventListener('change', () => {
-    loadRequests(dateFilter.value);
+    loadRequests(dateFilter.value, 1);
   });
 
   // フィルタークリア
   clearFilter.addEventListener('click', () => {
     dateFilter.value = '';
-    loadRequests();
+    loadRequests(null, 1);
   });
 
   // CSVエクスポート

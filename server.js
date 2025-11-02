@@ -216,14 +216,14 @@ app.post('/api/requests', requestLimiter, (req, res) => {
   });
 });
 
-// 今日のリクエスト一覧取得（誰でも閲覧可能）
+// 最新10件のリクエスト一覧取得（誰でも閲覧可能）
 app.get('/api/requests/today', (req, res) => {
   const sql = `
     SELECT id, song_name, artist_name, nickname, 
-           strftime('%H:%M', created_at) as time, is_read
+           strftime('%Y-%m-%d %H:%M', created_at) as time, is_read
     FROM requests 
-    WHERE date(created_at) = date(datetime('now', '+9 hours'))
     ORDER BY created_at DESC
+    LIMIT 10
   `;
   
   db.all(sql, [], (err, rows) => {
@@ -235,10 +235,21 @@ app.get('/api/requests/today', (req, res) => {
   });
 });
 
-// 全リクエスト取得（管理者のみ）
+// 全リクエスト取得（管理者のみ、ページネーション対応）
 app.get('/api/admin/requests', isAuthenticated, (req, res) => {
-  const { date } = req.query;
+  const { date, page = 1, limit = 20 } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
   
+  // カウントクエリ
+  let countSql = `SELECT COUNT(*) as total FROM requests`;
+  let countParams = [];
+  
+  if (date) {
+    countSql += ` WHERE date(created_at) = ?`;
+    countParams.push(date);
+  }
+  
+  // データ取得クエリ
   let sql = `
     SELECT id, song_name, artist_name, nickname, message, 
            created_at, is_read
@@ -251,14 +262,36 @@ app.get('/api/admin/requests', isAuthenticated, (req, res) => {
     params.push(date);
   }
   
-  sql += ' ORDER BY created_at DESC';
+  sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(limit), offset);
   
-  db.all(sql, params, (err, rows) => {
+  // 総数を取得
+  db.get(countSql, countParams, (err, countRow) => {
     if (err) {
       console.error('データベースエラー:', err);
       return res.status(500).json({ error: 'データ取得に失敗しました' });
     }
-    res.json(rows);
+    
+    const total = countRow.total;
+    const totalPages = Math.ceil(total / parseInt(limit));
+    
+    // データを取得
+    db.all(sql, params, (err, rows) => {
+      if (err) {
+        console.error('データベースエラー:', err);
+        return res.status(500).json({ error: 'データ取得に失敗しました' });
+      }
+      
+      res.json({
+        requests: rows,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: total,
+          totalPages: totalPages
+        }
+      });
+    });
   });
 });
 
