@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="テーマに沿った曲をリクエストできます">
+  <meta name="theme-color" content="#667eea">
+  <title>テーマリクエスト | ラジオ番組</title>
+  
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icons/icon-192x192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <svg class="icon-radio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
+            <line x1="2" y1="20" x2="2.01" y2="20"></line>
+          </svg>
+          <h1>曲リクエスト</h1>
+        </div>
+        <nav class="nav">
+          <a href="/" class="nav-link">リクエスト</a>
+          <a href="/today.html" class="nav-link">今日のリクエスト</a>
+          <a href="/theme-request.html" class="nav-link active">テーマリクエスト</a>
+          <a href="/playlist.html" class="nav-link">プレイリスト</a>
+          <a href="/admin.html" class="nav-link">管理画面</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main">
+      <!-- 受付停止メッセージ -->
+      <div id="closedNotice" class="closed-notice" style="display: none;">
+        <div class="closed-notice-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <div class="closed-notice-content">
+          <h2>現在、リクエストの受付を停止しています</h2>
+          <p>大変申し訳ございません。現在リクエストの受付を一時停止させていただいております。</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>テーマに沿った曲をリクエスト</h2>
+          <p>具体的なシチュエーションやテーマを選んで、ぴったりの曲をリクエストしてください</p>
+        </div>
+
+        <!-- テーマ選択フォーム -->
+        <form id="themeRequestForm" class="form">
+          
+          <!-- ステップ1: メインカテゴリー -->
+          <div class="form-step" id="step1">
+            <div class="step-header">
+              <span class="step-number">STEP 1</span>
+              <h3>どんな時に聴きたいですか？</h3>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label required">メインカテゴリー</label>
+              <div class="category-grid">
+                <label class="category-card">
+                  <input type="radio" name="mainCategory" value="気分転換" required>
+                  <div class="category-content">
+                    <span class="category-icon">🎵</span>
+                    <span class="category-name">気分転換したい時</span>
+                  </div>
+                </label>
+                <label class="category-card">
+                  <input type="radio" name="mainCategory" value="作業中" required>
+                  <div class="category-content">
+                    <span class="category-icon">💼</span>
+                    <span class="category-name">作業・勉強中</span>
+                  </div>
+                </label>
+                <label class="category-card">
+                  <input type="radio" name="mainCategory" value="移動中" required>
+                  <div class="category-content">
+                    <span class="category-icon">🚗</span>
+                    <span class="category-name">移動中・ドライブ</span>
+                  </div>
+                </label>
+                <label class="category-card">
+                  <input type="radio" name="mainCategory" value="思い出" required>
+                  <div class="category-content">
+                    <span class="category-icon">💭</span>
+                    <span class="category-name">思い出に浸りたい</span>
+                  </div>
+                </label>
+                <label class="category-card">
+                  <input type="radio" name="mainCategory" value="特定の感情" required>
+                  <div class="category-content">
+                    <span class="category-icon">💖</span>
+                    <span class="category-name">特定の感情を表現</span>
+                  </div>
+                </label>
+                <label class="category-card">
+                  <input type="radio" name="mainCategory" value="季節・イベント" required>
+                  <div class="category-content">
+                    <span class="category-icon">🎄</span>
+                    <span class="category-name">季節・イベント</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ステップ2: サブカテゴリー（動的に変更） -->
+          <div class="form-step" id="step2" style="display: none;">
+            <div class="step-header">
+              <span class="step-number">STEP 2</span>
+              <h3>もう少し詳しく教えてください</h3>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label required">具体的なシチュエーション</label>
+              <div id="subCategoryContainer" class="subcategory-list">
+                <!-- JavaScriptで動的に生成 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- ステップ3: 曲の雰囲気 -->
+          <div class="form-step" id="step3" style="display: none;">
+            <div class="step-header">
+              <span class="step-number">STEP 3</span>
+              <h3>どんな曲調が良いですか？</h3>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label required">曲の雰囲気・テンポ</label>
+              <div class="mood-grid">
+                <label class="mood-card">
+                  <input type="radio" name="mood" value="アップテンポで明るい" required>
+                  <span>🎉 アップテンポで明るい</span>
+                </label>
+                <label class="mood-card">
+                  <input type="radio" name="mood" value="落ち着いた・しっとり" required>
+                  <span>🌙 落ち着いた・しっとり</span>
+                </label>
+                <label class="mood-card">
+                  <input type="radio" name="mood" value="激しい・パワフル" required>
+                  <span>⚡ 激しい・パワフル</span>
+                </label>
+                <label class="mood-card">
+                  <input type="radio" name="mood" value="切ない・感動的" required>
+                  <span>😢 切ない・感動的</span>
+                </label>
+                <label class="mood-card">
+                  <input type="radio" name="mood" value="おしゃれ・洗練" required>
+                  <span>✨ おしゃれ・洗練</span>
+                </label>
+                <label class="mood-card">
+                  <input type="radio" name="mood" value="懐かしい・レトロ" required>
+                  <span>📻 懐かしい・レトロ</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ステップ4: リクエスト詳細 -->
+          <div class="form-step" id="step4" style="display: none;">
+            <div class="step-header">
+              <span class="step-number">STEP 4</span>
+              <h3>リクエストの詳細を入力してください</h3>
+            </div>
+
+            <!-- テーマサマリー表示 -->
+            <div class="theme-summary" id="themeSummary">
+              <h4>選択したテーマ</h4>
+              <div class="summary-content"></div>
+            </div>
+
+            <div class="form-group">
+              <label for="songName" class="form-label required">曲名</label>
+              <input 
+                type="text" 
+                id="songName" 
+                name="song_name" 
+                class="form-input" 
+                maxlength="100"
+                required
+                placeholder="例: 夜に駆ける"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="artistName" class="form-label required">アーティスト名</label>
+              <input 
+                type="text" 
+                id="artistName" 
+                name="artist_name" 
+                class="form-input"
+                maxlength="100"
+                required
+                placeholder="例: YOASOBI"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="nickname" class="form-label required">ラジオネーム</label>
+              <input 
+                type="text" 
+                id="nickname" 
+                name="nickname" 
+                class="form-input"
+                maxlength="50"
+                required
+                placeholder="例: ゆうきん"
+              >
+            </div>
+
+            <div class="form-group">
+              <label for="themeReason" class="form-label required">この曲を選んだ理由</label>
+              <textarea 
+                id="themeReason" 
+                name="theme_reason" 
+                class="form-textarea"
+                maxlength="300"
+                rows="4"
+                required
+                placeholder="なぜこのテーマにこの曲がぴったりだと思いますか？（300文字まで）"
+              ></textarea>
+              <div class="char-count">
+                <span id="reasonCharCount">0</span> / 300文字
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="captcha" class="form-label required">計算問題（スパム防止）</label>
+              <div class="captcha-container">
+                <span id="captchaQuestion" class="captcha-question">読み込み中...</span>
+                <input 
+                  type="text" 
+                  id="captcha" 
+                  name="captcha" 
+                  class="form-input captcha-input"
+                  required
+                  placeholder="答え"
+                  autocomplete="off"
+                >
+                <button type="button" id="refreshCaptcha" class="btn-refresh">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ナビゲーションボタン -->
+          <div class="form-navigation">
+            <button type="button" id="prevBtn" class="btn btn-secondary" style="display: none;">
+              ← 前へ
+            </button>
+            <button type="button" id="nextBtn" class="btn btn-primary">
+              次へ →
+            </button>
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="display: none;">
+              リクエストを送信
+            </button>
+          </div>
+        </form>
+
+        <div id="successMessage" class="alert alert-success" style="display: none;">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <div>
+            <strong>テーマリクエストを受け付けました！</strong>
+            <p>素敵なリクエストをありがとうございます。番組でご紹介させていただきます。</p>
+          </div>
+        </div>
+
+        <div id="errorMessage" class="alert alert-error" style="display: none;">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            <strong>エラーが発生しました</strong>
+            <p id="errorText"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>テーマリクエストについて</h3>
+        <ul class="info-list">
+          <li>具体的なシチュエーションを選ぶことで、テーマに合った曲を集めやすくなります</li>
+          <li>選んだ理由を詳しく書くと、DJが番組で紹介しやすくなります</li>
+          <li>同じテーマでも、人によって選ぶ曲が違うのが面白いところです</li>
+          <li>テーマから外れた曲は採用されない場合があります</li>
+        </ul>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2024 Radio Request System. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="/js/theme-request.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((error) => {
+          console.log('Service Worker registration failed:', error);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
