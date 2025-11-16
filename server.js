@@ -216,22 +216,50 @@ app.post('/api/requests', requestLimiter, (req, res) => {
   });
 });
 
-// 最新10件のリクエスト一覧取得（誰でも閲覧可能）
+// 最新リクエスト一覧取得（誰でも閲覧可能、ページネーション対応）
 app.get('/api/requests/today', (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const offset = (parseInt(page) - 1) * parseInt(limit);
+  
+  // カウントクエリ
+  const countSql = `SELECT COUNT(*) as total FROM requests`;
+  
+  // データ取得クエリ
   const sql = `
     SELECT id, song_name, artist_name, nickname, 
            strftime('%Y-%m-%d %H:%M', created_at) as time, is_read
     FROM requests 
     ORDER BY created_at DESC
-    LIMIT 10
+    LIMIT ? OFFSET ?
   `;
   
-  db.all(sql, [], (err, rows) => {
+  // 総数を取得
+  db.get(countSql, [], (err, countRow) => {
     if (err) {
       console.error('データベースエラー:', err);
       return res.status(500).json({ error: 'データ取得に失敗しました' });
     }
-    res.json(rows);
+    
+    const total = countRow.total;
+    const totalPages = Math.ceil(total / parseInt(limit));
+    
+    // データを取得
+    db.all(sql, [parseInt(limit), offset], (err, rows) => {
+      if (err) {
+        console.error('データベースエラー:', err);
+        return res.status(500).json({ error: 'データ取得に失敗しました' });
+      }
+      
+      res.json({
+        requests: rows,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: total,
+          totalPages: totalPages
+        }
+      });
+    });
   });
 });
 
