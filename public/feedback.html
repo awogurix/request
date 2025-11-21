@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ラジオっぽい部屋へのフィードバックをお寄せください">
+  <meta name="theme-color" content="#667eea">
+  <title>フィードバック | ラジオっぽい部屋 by clubhouse</title>
+  
+  <link rel="manifest" href="/manifest.json?v=15">
+  <link rel="icon" href="/icons/favicon.ico?v=15">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png?v=15">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <svg class="icon-radio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
+            <line x1="2" y1="20" x2="2.01" y2="20"></line>
+          </svg>
+          <h1><span class="logo-main">ラジオっぽい部屋</span> <span class="logo-sub">by clubhouse</span></h1>
+        </div>
+        <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="nav" id="mainNav">
+          <a href="/" class="nav-link">リクエスト</a>
+          <a href="/today.html" class="nav-link">最新のリクエスト</a>
+          <a href="/theme-request.html" class="nav-link">テーマ募集</a>
+          <a href="/feedback.html" class="nav-link active">フィードバック</a>
+          <a href="/playlist.html" class="nav-link">プレイリスト</a>
+          <a href="/admin.html" class="nav-link">管理画面</a>
+        </nav>
+      </div>
+    </header>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <main class="main">
+      <div class="card">
+        <div class="card-header">
+          <h2>「ラジオっぽい部屋」がもっとよくなるように</h2>
+          <p>皆様からのご意見・ご感想をお聞かせください</p>
+        </div>
+
+        <form id="feedbackForm" class="form">
+          <div class="form-group">
+            <label for="feedbackType" class="form-label required">フィードバックの種類</label>
+            <select id="feedbackType" name="feedback_type" class="form-input" required>
+              <option value="">選択してください</option>
+              <option value="改善提案">改善提案</option>
+              <option value="不具合報告">不具合報告</option>
+              <option value="感想・応援">感想・応援</option>
+              <option value="その他">その他</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="feedbackContent" class="form-label required">内容</label>
+            <textarea 
+              id="feedbackContent" 
+              name="content" 
+              class="form-textarea"
+              maxlength="1000"
+              rows="8"
+              required
+              placeholder="具体的にご記入ください（1000文字まで）
+
+例:
+・リクエストフォームに◯◯の機能があると便利です
+・◯◯のページで不具合が発生しました
+・いつも楽しく聴いています！
+・こんな企画があったら嬉しいです"
+            ></textarea>
+            <div class="char-count">
+              <span id="contentCharCount">0</span> / 1000文字
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nickname" class="form-label">ラジオネーム（任意）</label>
+            <input 
+              type="text" 
+              id="nickname" 
+              name="nickname" 
+              class="form-input"
+              maxlength="50"
+              placeholder="例: ゆうきん（匿名での送信も可能です）"
+            >
+            <small class="form-help">番組内で紹介させていただく場合があります</small>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="submitBtn">
+              フィードバックを送信
+            </button>
+          </div>
+        </form>
+
+        <div id="successMessage" class="alert alert-success" style="display: none;">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <div>
+            <strong>フィードバックを受け付けました！</strong>
+            <p>貴重なご意見をありがとうございます。今後の番組作りの参考にさせていただきます。</p>
+          </div>
+        </div>
+
+        <div id="errorMessage" class="alert alert-error" style="display: none;">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            <strong>エラーが発生しました</strong>
+            <p id="errorText"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>💡 フィードバックについて</h3>
+        <ul class="info-list">
+          <li>いただいたご意見は運営チームで確認し、今後の改善に活かします</li>
+          <li>匿名でも送信できますが、番組で紹介する場合はラジオネームをご記入ください</li>
+          <li>不具合報告の場合は、できるだけ詳しい状況をお書きください</li>
+          <li>個別の返信はできかねますが、すべてのフィードバックに目を通しています</li>
+        </ul>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2024 Radio Request System. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <script src="/js/feedback.js?v=15"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((error) => {
+          console.log('Service Worker registration failed:', error);
+        });
+      });
+    }
+  </script>
+  <script src="/js/menu.js?v=24"></script>
+</body>
+</html>

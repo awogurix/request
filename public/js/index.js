@@ -4,8 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('requestForm');
   const messageInput = document.getElementById('message');
   const charCount = document.getElementById('charCount');
-  const captchaQuestion = document.getElementById('captchaQuestion');
-  const refreshCaptchaBtn = document.getElementById('refreshCaptcha');
   const successMessage = document.getElementById('successMessage');
   const errorMessage = document.getElementById('errorMessage');
   const errorText = document.getElementById('errorText');
@@ -52,13 +50,22 @@ document.addEventListener('DOMContentLoaded', () => {
           document.querySelector('.card-header p').textContent = 'お好きな曲をリクエストしてください。番組でご紹介させていただきます。';
         }
       }
+      
+      // 次回配信情報を読み込み（受付状態を渡す）
+      loadNextBroadcastInfo(status);
     } catch (error) {
       console.error('受付状態確認エラー:', error);
     }
   }
 
-  // 次回配信情報を取得
-  async function loadNextBroadcastInfo() {
+  // 次回配信情報を取得（受付停止時は非表示）
+  async function loadNextBroadcastInfo(requestStatus) {
+    // 受付停止中（status === '0'）の場合は表示しない
+    if (requestStatus === '0') {
+      document.getElementById('nextBroadcastInfo').style.display = 'none';
+      return;
+    }
+    
     try {
       const response = await fetch('/api/settings/next-broadcast');
       const data = await response.json();
@@ -82,7 +89,25 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // 配信時間情報がある場合
       if (data.time && data.time.trim()) {
-        timeValue.textContent = data.time;
+        let displayTime = data.time;
+        
+        // 「日付|時間帯」形式の場合はフォーマット
+        if (data.time.includes('|')) {
+          const [date, period] = data.time.split('|');
+          const broadcastDate = new Date(date);
+          if (!isNaN(broadcastDate.getTime())) {
+            const formattedDate = `${broadcastDate.getMonth() + 1}月${broadcastDate.getDate()}日`;
+            displayTime = `${formattedDate} ${period}`;
+          }
+        } else if (data.time.includes('T')) {
+          // datetime-local形式の場合はフォーマット
+          const broadcastDate = new Date(data.time);
+          if (!isNaN(broadcastDate.getTime())) {
+            displayTime = `${broadcastDate.getMonth() + 1}月${broadcastDate.getDate()}日 ${broadcastDate.getHours()}:${String(broadcastDate.getMinutes()).padStart(2, '0')}`;
+          }
+        }
+        
+        timeValue.textContent = displayTime;
         timeItem.style.display = 'flex';
         hasInfo = true;
       } else {
@@ -112,23 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // CAPTCHA読み込み
-  async function loadCaptcha() {
-    try {
-      const response = await fetch('/api/captcha');
-      const data = await response.json();
-      captchaQuestion.textContent = data.question;
-    } catch (error) {
-      console.error('CAPTCHA読み込みエラー:', error);
-      captchaQuestion.textContent = 'エラー';
-    }
-  }
-
-  // CAPTCHA更新ボタン
-  refreshCaptchaBtn.addEventListener('click', () => {
-    loadCaptcha();
-    document.getElementById('captcha').value = '';
-  });
+  // CAPTCHA機能は削除されました
 
   // フォーム送信
   form.addEventListener('submit', async (e) => {
@@ -146,8 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
       song_name: document.getElementById('songName').value.trim(),
       artist_name: document.getElementById('artistName').value.trim(),
       nickname: document.getElementById('nickname').value.trim(),
-      message: messageInput.value.trim(),
-      captcha: document.getElementById('captcha').value.trim()
+      message: messageInput.value.trim()
     };
 
     try {
@@ -179,16 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // エラー
         errorText.textContent = data.error || 'リクエストの送信に失敗しました';
         errorMessage.style.display = 'flex';
-        
-        // CAPTCHAを再読み込み
-        loadCaptcha();
-        document.getElementById('captcha').value = '';
       }
     } catch (error) {
       console.error('送信エラー:', error);
       errorText.textContent = 'ネットワークエラーが発生しました。もう一度お試しください。';
       errorMessage.style.display = 'flex';
-      loadCaptcha();
     } finally {
       // ボタンを有効化
       submitBtn.disabled = false;
@@ -196,12 +199,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // 初期CAPTCHA読み込み
-  loadCaptcha();
-  
-  // 受付状態をチェック
+  // 受付状態をチェック（次回配信情報も内部で読み込まれる）
   checkRequestStatus();
+
+  // ジングルモーダル機能
+  const jingleBtn = document.getElementById('jingleBtn');
+  const jingleModal = document.getElementById('jingleModal');
+  const jingleModalClose = document.querySelector('.jingle-modal-close');
+  const jingleModalOverlay = document.querySelector('.jingle-modal-overlay');
+  const jingleVideo = document.getElementById('jingleVideo');
   
-  // 次回配信情報を読み込み
-  loadNextBroadcastInfo();
+  if (jingleBtn && jingleModal) {
+    // モーダルを開く
+    jingleBtn.addEventListener('click', () => {
+      jingleModal.classList.add('active');
+      document.body.style.overflow = 'hidden'; // スクロールを無効化
+    });
+
+    // モーダルを閉じる関数
+    const closeModal = () => {
+      jingleModal.classList.remove('active');
+      document.body.style.overflow = ''; // スクロールを有効化
+      if (jingleVideo) {
+        jingleVideo.pause(); // 動画を一時停止
+      }
+    };
+
+    // 閉じるボタンをクリック
+    if (jingleModalClose) {
+      jingleModalClose.addEventListener('click', closeModal);
+    }
+
+    // オーバーレイをクリック
+    if (jingleModalOverlay) {
+      jingleModalOverlay.addEventListener('click', closeModal);
+    }
+
+    // ESCキーで閉じる
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && jingleModal.classList.contains('active')) {
+        closeModal();
+      }
+    });
+  }
 });

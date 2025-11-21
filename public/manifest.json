@@ -1,6 +1,6 @@
 {
-  "name": "ラジオ番組曲リクエスト",
-  "short_name": "曲リクエスト",
+  "name": "ラジオっぽい部屋 by clubhouse",
+  "short_name": "ラジオっぽい部屋",
   "description": "ラジオ番組への曲リクエスト受付システム",
   "start_url": "/",
   "display": "standalone",

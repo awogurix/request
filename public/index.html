@@ -3,19 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="ラジオ番組への曲リクエストを受け付けています。お好きな曲をリクエストしてください。">
+  <meta name="description" content="ラジオ番組へのラジオっぽい部屋 by clubhouseを受け付けています。お好きな曲をリクエストしてください。">
   <meta name="theme-color" content="#667eea">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="曲リクエスト">
-  <title>曲リクエスト | ラジオ番組</title>
+  <meta name="apple-mobile-web-app-title" content="ラジオっぽい部屋 by clubhouse">
+  <title>ラジオっぽい部屋 by clubhouse | ラジオ番組</title>
   
   <!-- PWA Manifest -->
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="/manifest.json?v=15">
   
   <!-- Icons -->
-  <link rel="icon" href="/icons/icon-192x192.png">
-  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <link rel="icon" type="image/x-icon" href="/icons/favicon.ico?v=15">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png?v=15">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png?v=15">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,17 +32,28 @@
             <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
             <line x1="2" y1="20" x2="2.01" y2="20"></line>
           </svg>
-          <h1>曲リクエスト</h1>
+          <h1><span class="logo-main">ラジオっぽい部屋</span> <span class="logo-sub">by clubhouse</span></h1>
+          <button id="jingleBtn" class="jingle-link" title="番組ジングルを見る" aria-label="番組ジングルを見る">
+            🎵 ジングル
+          </button>
         </div>
-        <nav class="nav">
+        <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="nav" id="mainNav">
           <a href="/" class="nav-link active">リクエスト</a>
-          <a href="/today.html" class="nav-link">今日のリクエスト</a>
-          <a href="/theme-request.html" class="nav-link">テーマリクエスト</a>
+          <a href="/today.html" class="nav-link">最新のリクエスト</a>
+          <a href="/theme-request.html" class="nav-link">テーマ募集</a>
+          <a href="/feedback.html" class="nav-link">フィードバック</a>
           <a href="/playlist.html" class="nav-link">プレイリスト</a>
           <a href="/admin.html" class="nav-link">管理画面</a>
         </nav>
       </div>
     </header>
+
+    <div class="menu-overlay" id="menuOverlay"></div>
 
     <main class="main">
       <!-- 受付停止メッセージ（停止中のみ表示） -->
@@ -57,6 +69,14 @@
           <h2>現在、リクエストの受付を停止しています</h2>
           <p>大変申し訳ございません。現在リクエストの受付を一時停止させていただいております。</p>
           <p>受付再開までしばらくお待ちください。</p>
+          <div class="theme-suggestion-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <strong>テーマの募集は受付中です！</strong>
+            <a href="/theme-request.html">こちらから番組テーマを提案できます →</a>
+          </div>
         </div>
       </div>
 
@@ -81,25 +101,6 @@
         </div>
       </div>
 
-      <!-- プッシュ通知設定 -->
-      <div class="push-notification-card" id="pushNotificationCard" style="display: none;">
-        <div class="push-notification-content">
-          <div class="push-notification-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-          </div>
-          <div class="push-notification-text">
-            <strong>お知らせ通知</strong>
-            <p>新しいお知らせがあるとスマホに通知が届きます</p>
-          </div>
-          <button id="push-subscribe-button" class="btn btn-primary" onclick="window.pushNotification.subscribe()">
-            通知をオンにする
-          </button>
-        </div>
-      </div>
-
       <div class="card">
         <div class="card-header">
           <h2>あなたのリクエストをお待ちしています</h2>
@@ -118,8 +119,6 @@
           </div>
           <ul class="notice-list">
             <li>リクエスト曲は、私の独断偏見で選曲させていただきます。（リクエスト曲は必ず配信で再生されるわけではないことをご了承ください）</li>
-            <li>次回の配信の1時間前にリクエストの受付を停止させていただきます。</li>
-            <li>配信中はリクエストを受け付けませんので、ご了承ください。</li>
             <li>リクエスト曲数の上限はございません。</li>
           </ul>
         </div>
@@ -179,25 +178,23 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="captcha" class="form-label required">計算問題（スパム防止）</label>
-            <div class="captcha-container">
-              <span id="captchaQuestion" class="captcha-question">読み込み中...</span>
-              <input 
-                type="text" 
-                id="captcha" 
-                name="captcha" 
-                class="form-input captcha-input"
-                required
-                placeholder="答え"
-                autocomplete="off"
-              >
-              <button type="button" id="refreshCaptcha" class="btn-refresh">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                </svg>
-              </button>
+          <!-- 確認チェックボックス -->
+          <div class="form-group confirmation-box">
+            <div class="confirmation-message">
+              <p class="confirmation-title">リクエストありがとうございます！</p>
+              <p class="confirmation-text">時間の制限、配信の流れや雰囲気などの様々な理由でリクエストした曲が流れない場合もございます。</p>
+              <p class="confirmation-question">ご了承いただけますか？</p>
             </div>
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                id="agreement" 
+                name="agreement" 
+                class="checkbox-input"
+                required
+              >
+              <span class="checkbox-text">はい！</span>
+            </label>
           </div>
 
           <div class="form-actions">
@@ -206,6 +203,27 @@
             </button>
           </div>
         </form>
+
+        <!-- PWAインストール案内 -->
+        <div class="pwa-install-card">
+          <div class="pwa-install-content">
+            <div class="pwa-install-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </div>
+            <div class="pwa-install-text">
+              <h3>📱 アプリとして使えます！</h3>
+              <p>ホーム画面に追加すると、アプリのように快適に利用できます。</p>
+              <p>✨ リクエスト受付再開やプレイリスト公開の通知も届きます！</p>
+              <a href="https://mfucdfhf.gensparkspace.com/" target="_blank" rel="noopener noreferrer" class="pwa-learn-more">
+                📖 インストール方法を見る →
+              </a>
+            </div>
+          </div>
+        </div>
 
         <div id="successMessage" class="alert alert-success" style="display: none;">
           <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -234,7 +252,7 @@
       <div class="info-card">
         <h3>リクエストについて</h3>
         <ul class="info-list">
-          <li>受付したリクエストは「今日のリクエスト」ページでご確認いただけます</li>
+          <li>受付したリクエストは「最新のリクエスト」ページでご確認いただけます</li>
           <li>番組内で全てのリクエストにお応えできない場合があります</li>
           <li>不適切な内容のリクエストは削除させていただく場合があります</li>
           <li>短時間に複数のリクエストを送信することはできません</li>
@@ -247,7 +265,7 @@
     </footer>
   </div>
 
-  <script src="/js/index.js"></script>
+  <script src="/js/index.js?v=15"></script>
   <!-- <script src="/js/pwa-install.js"></script> --> <!-- PWA install prompt disabled -->
   <script src="/js/push-notification.js"></script>
   
@@ -258,14 +276,6 @@
         navigator.serviceWorker.register('/sw.js')
           .then((registration) => {
             console.log('Service Worker registered successfully:', registration.scope);
-            
-            // プッシュ通知カードを表示
-            if (window.pushNotification && window.pushNotification.isSupported()) {
-              const pushCard = document.getElementById('pushNotificationCard');
-              if (pushCard) {
-                pushCard.style.display = 'block';
-              }
-            }
           })
           .catch((error) => {
             console.log('Service Worker registration failed:', error);
@@ -273,5 +283,32 @@
       });
     }
   </script>
+
+  <!-- ジングルモーダル -->
+  <div id="jingleModal" class="jingle-modal">
+    <div class="jingle-modal-overlay"></div>
+    <div class="jingle-modal-content">
+      <button class="jingle-modal-close" aria-label="閉じる">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div class="jingle-modal-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <h3>番組ジングル</h3>
+      </div>
+      <div class="jingle-modal-body">
+        <video id="jingleVideo" class="jingle-modal-video" controls poster="/icons/icon-512x512.png">
+          <source src="/media/jingle.mp4" type="video/mp4">
+          お使いのブラウザは動画タグをサポートしていません。
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/menu.js?v=24"></script>
 </body>
 </html>
