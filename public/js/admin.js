@@ -16,50 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminRequestsList = document.getElementById('adminRequestsList');
   const noAdminRequests = document.getElementById('noAdminRequests');
 
-  // === タブ切り替え機能 ===
-  const adminTabs = document.querySelectorAll('.admin-tab');
-  const adminTabContents = document.querySelectorAll('.admin-tab-content');
-  
-  adminTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      // すべてのタブとコンテンツからactiveクラスを削除
-      adminTabs.forEach(t => t.classList.remove('active'));
-      adminTabContents.forEach(content => content.classList.remove('active'));
-      
-      // クリックされたタブにactiveクラスを追加
-      tab.classList.add('active');
-      
-      // 対応するコンテンツを表示
-      const tabName = tab.dataset.tab;
-      const tabContentId = `tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
-      const tabContent = document.getElementById(tabContentId);
-      
-      console.log('Tab switched to:', tabName);
-      console.log('Tab content ID:', tabContentId);
-      console.log('Tab content element:', tabContent);
-      console.log('Tab content classes before:', tabContent?.className);
-      
-      if (tabContent) {
-        tabContent.classList.add('active');
-        console.log('Tab content classes after:', tabContent.className);
-        console.log('Tab content computed display:', getComputedStyle(tabContent).display);
-        
-        // タブごとのデータを再読み込み
-        if (tabName === 'requests') {
-          window.loadRequests();
-        } else if (tabName === 'playlists') {
-          console.log('Loading playlists...');
-          window.loadPlaylists();
-        } else if (tabName === 'announcements') {
-          console.log('Loading announcements...');
-          window.loadAnnouncements();
-        } else if (tabName === 'backups') {
-          console.log('Loading backups...');
-          window.loadBackups();
-        }
-      }
-    });
-  });
+  // タブ切り替え機能は削除（シンプルな1ページレイアウトに変更）
 
   // 統計情報の要素
   const statTotal = document.getElementById('statTotal');
@@ -102,11 +59,13 @@ document.addEventListener('DOMContentLoaded', () => {
     loginSection.style.display = 'none';
     adminSection.style.display = 'block';
     
-    // ダッシュボードとリクエストタブのデータのみ読み込む
-    // 他のタブはタブクリック時に読み込む
+    // すべてのセクションのデータを読み込む（シンプルな1ページレイアウト）
     loadStats();
     window.loadRequests();
     loadRequestStatus();
+    window.loadPlaylists();
+    window.loadAnnouncements();
+    window.loadBackups();
     
     console.log('=== showAdminSection complete ===');
   }
