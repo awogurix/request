@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="ラジオ番組の管理画面">
   <meta name="theme-color" content="#667eea">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="管理画面">
   <title>管理画面 | ラジオ番組</title>
   
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/icons/icon-192x192.png">
-  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <link rel="manifest" href="/manifest.json?v=108">
+  <link rel="icon" type="image/x-icon" href="/icons/favicon.ico?v=108">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png?v=108">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png?v=108">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=108">
 </head>
 <body>
   <div class="container">
@@ -28,17 +30,24 @@
             <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
             <line x1="2" y1="20" x2="2.01" y2="20"></line>
           </svg>
-          <h1>曲リクエスト</h1>
+          <h1><span class="logo-main">ラジオっぽい部屋</span> <span class="logo-sub">by clubhouse</span></h1>
         </div>
-        <nav class="nav">
+        <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="nav" id="mainNav">
           <a href="/" class="nav-link">リクエスト</a>
-          <a href="/today.html" class="nav-link">今日のリクエスト</a>
-          <a href="/theme-request.html" class="nav-link">テーマリクエスト</a>
+          <a href="/today.html" class="nav-link">最新のリクエスト</a>
+          <a href="/theme-request.html" class="nav-link">テーマ募集</a>
+          <a href="/feedback.html" class="nav-link">フィードバック</a>
           <a href="/playlist.html" class="nav-link">プレイリスト</a>
           <a href="/admin.html" class="nav-link active">管理画面</a>
         </nav>
       </div>
     </header>
+    <div class="menu-overlay" id="menuOverlay"></div>
 
     <main class="main">
       <!-- ログイン画面 -->
@@ -92,11 +101,12 @@
             <div class="stat-value" id="statToday">0</div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">未選曲</div>
+            <div class="stat-label">未読</div>
             <div class="stat-value" id="statUnread">0</div>
           </div>
         </div>
 
+        <!-- リクエスト管理 -->
         <div class="card">
           <div class="card-header">
             <h2>リクエスト管理</h2>
@@ -111,7 +121,7 @@
               <span class="status-label">リクエスト受付状態:</span>
               <span id="statusBadge" class="status-badge status-enabled">受付中</span>
             </div>
-            <button id="toggleStatusBtn" class="btn btn-primary">受付状態を変更</button>
+            <button id="toggleStatusBtn" class="btn btn-primary">受付を停止する</button>
           </div>
 
           <!-- 次回配信情報設定 -->
@@ -157,7 +167,7 @@
               </svg>
               <div>
                 <strong>更新しました</strong>
-                <p>次回配信情報が正常に更新されました</p>
+                <p id="broadcastSuccessText">次回配信情報が正常に更新されました</p>
               </div>
             </div>
 
@@ -204,219 +214,274 @@
             <p>プレイリストのリンクを追加・管理できます</p>
           </div>
 
-          <form id="playlistForm" class="form">
-            <div class="form-group">
-              <label for="playlistTitle" class="form-label required">タイトル</label>
-              <input 
-                type="text" 
-                id="playlistTitle" 
-                name="title" 
-                class="form-input"
-                maxlength="200"
-                required
-                placeholder="例: 10月のおすすめプレイリスト"
-              >
-            </div>
+          <div class="card-body">
+            <form id="playlistForm" class="form">
+              <div class="form-group">
+                <label for="playlistTitle" class="form-label required">タイトル</label>
+                <input 
+                  type="text" 
+                  id="playlistTitle" 
+                  name="title" 
+                  class="form-input"
+                  maxlength="200"
+                  required
+                  placeholder="例: 10月のおすすめプレイリスト"
+                >
+              </div>
 
-            <div class="form-group">
-              <label for="playlistUrl" class="form-label required">URL</label>
-              <input 
-                type="url" 
-                id="playlistUrl" 
-                name="url" 
-                class="form-input"
-                maxlength="500"
-                required
-                placeholder="例: https://open.spotify.com/playlist/..."
-              >
-            </div>
+              <div class="form-group">
+                <label for="playlistDate" class="form-label">プレイリスト日付（任意）</label>
+                <input 
+                  type="date" 
+                  id="playlistDate" 
+                  name="playlist_date" 
+                  class="form-input"
+                >
+                <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                  プレイリストの配信日や公開日を設定できます
+                </div>
+              </div>
 
-            <div class="form-group">
-              <label for="playlistDescription" class="form-label">説明（任意）</label>
-              <textarea 
-                id="playlistDescription" 
-                name="description" 
-                class="form-textarea"
-                maxlength="500"
-                rows="3"
-                placeholder="プレイリストの説明を入力してください（500文字まで）"
-              ></textarea>
-              <div class="char-count">
-                <span id="playlistCharCount">0</span> / 500文字
+              <div class="form-group">
+                <label for="playlistUrl" class="form-label required">URL</label>
+                <input 
+                  type="url" 
+                  id="playlistUrl" 
+                  name="url" 
+                  class="form-input"
+                  maxlength="500"
+                  required
+                  placeholder="例: https://open.spotify.com/playlist/..."
+                >
+              </div>
+
+              <div class="form-group">
+                <label for="playlistDescription" class="form-label">説明（任意）</label>
+                <textarea 
+                  id="playlistDescription" 
+                  name="description" 
+                  class="form-textarea"
+                  maxlength="500"
+                  rows="3"
+                  placeholder="プレイリストの説明を入力してください（500文字まで）"
+                ></textarea>
+                <div class="char-count">
+                  <span id="playlistCharCount">0</span> / 500文字
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="addPlaylistBtn">
+                  プレイリストを追加
+                </button>
+              </div>
+            </form>
+
+            <div id="playlistSuccess" class="alert alert-success" style="display: none; margin-top: 20px;">
+              <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <div>
+                <strong>追加しました</strong>
+                <p>プレイリストが正常に追加されました</p>
               </div>
             </div>
 
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary" id="addPlaylistBtn">
-                プレイリストを追加
-              </button>
+            <div id="playlistError" class="alert alert-error" style="display: none; margin-top: 20px;">
+              <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <div>
+                <strong>エラー</strong>
+                <p id="playlistErrorText"></p>
+              </div>
             </div>
-          </form>
 
-          <div id="playlistSuccess" class="alert alert-success" style="display: none; margin-top: 20px;">
-            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <div>
-              <strong>追加しました</strong>
-              <p>プレイリストが正常に追加されました</p>
-            </div>
-          </div>
-
-          <div id="playlistError" class="alert alert-error" style="display: none; margin-top: 20px;">
-            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <div>
-              <strong>エラー</strong>
-              <p id="playlistErrorText"></p>
-            </div>
-          </div>
-
-          <div style="margin-top: 30px;">
-            <h3 style="margin-bottom: 15px;">登録済みプレイリスト</h3>
-            <div id="adminPlaylistsList" class="admin-requests-list">
-              <div class="loading">読み込み中...</div>
-            </div>
-            <div id="noAdminPlaylists" class="no-data" style="display: none;">
-              <p>プレイリストがありません</p>
+            <div style="margin-top: 30px;">
+              <h3 style="margin-bottom: 15px;">登録済みプレイリスト</h3>
+              <div id="adminPlaylistsList" class="admin-requests-list">
+                <div class="loading">読み込み中...</div>
+              </div>
+              <div id="noAdminPlaylists" class="no-data" style="display: none;">
+                <p>プレイリストがありません</p>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- お知らせ管理セクション -->
         <div class="card">
-        <div class="card-header">
-          <h2>お知らせ管理</h2>
-          <p>お知らせを投稿すると、通知をオンにしているユーザーにプッシュ通知が届きます</p>
-        </div>
+          <div class="card-header">
+            <h2>お知らせ管理</h2>
+            <p>お知らせを投稿すると、通知をオンにしているユーザーにプッシュ通知が届きます</p>
+          </div>
 
-        <div class="card-body">
-          <form id="announcementForm" class="form">
-            <div class="form-group">
-              <label for="announcementTitle" class="form-label required">お知らせタイトル</label>
-              <input 
-                type="text" 
-                id="announcementTitle" 
-                class="form-input"
-                maxlength="100"
-                required
-                placeholder="例: 次回配信のお知らせ"
-              >
-            </div>
+          <div class="card-body">
+            <form id="announcementForm" class="form">
+              <div class="form-group">
+                <label for="announcementTitle" class="form-label required">お知らせタイトル</label>
+                <input 
+                  type="text" 
+                  id="announcementTitle" 
+                  class="form-input"
+                  maxlength="100"
+                  required
+                  placeholder="例: 次回配信のお知らせ"
+                >
+              </div>
 
-            <div class="form-group">
-              <label for="announcementMessage" class="form-label required">お知らせ内容</label>
-              <textarea 
-                id="announcementMessage" 
-                class="form-input"
-                rows="4"
-                maxlength="500"
-                required
-                placeholder="お知らせの詳細を入力してください"
-              ></textarea>
-              <div class="char-counter">
-                <span id="announcementCharCount">0</span> / 500
+              <div class="form-group">
+                <label for="announcementMessage" class="form-label required">お知らせ内容</label>
+                <textarea 
+                  id="announcementMessage" 
+                  class="form-input"
+                  rows="4"
+                  maxlength="500"
+                  required
+                  placeholder="お知らせの詳細を入力してください"
+                ></textarea>
+                <div class="char-counter">
+                  <span id="announcementCharCount">0</span> / 500
+                </div>
+              </div>
+
+              <button type="submit" id="sendAnnouncementBtn" class="btn btn-primary">
+                プッシュ通知を送信
+              </button>
+            </form>
+
+            <div id="announcementSuccess" class="alert alert-success" style="display: none; margin-top: 20px;">
+              <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <div>
+                <strong>送信しました</strong>
+                <p id="announcementSuccessText"></p>
               </div>
             </div>
 
-            <button type="submit" id="sendAnnouncementBtn" class="btn btn-primary">
-              プッシュ通知を送信
-            </button>
-          </form>
-
-          <div id="announcementSuccess" class="alert alert-success" style="display: none; margin-top: 20px;">
-            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <div>
-              <strong>送信しました</strong>
-              <p id="announcementSuccessText"></p>
+            <div id="announcementError" class="alert alert-error" style="display: none; margin-top: 20px;">
+              <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <div>
+                <strong>エラー</strong>
+                <p id="announcementErrorText"></p>
+              </div>
             </div>
-          </div>
 
-          <div id="announcementError" class="alert alert-error" style="display: none; margin-top: 20px;">
-            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <div>
-              <strong>エラー</strong>
-              <p id="announcementErrorText"></p>
-            </div>
-          </div>
-
-          <div style="margin-top: 30px;">
-            <h3 style="margin-bottom: 15px;">お知らせ履歴</h3>
-            <div id="announcementsList" class="admin-requests-list">
-              <div class="loading">読み込み中...</div>
-            </div>
-            <div id="noAnnouncements" class="no-data" style="display: none;">
-              <p>お知らせがありません</p>
+            <div style="margin-top: 30px;">
+              <h3 style="margin-bottom: 15px;">お知らせ履歴</h3>
+              <div id="announcementsList" class="admin-requests-list">
+                <div class="loading">読み込み中...</div>
+              </div>
+              <div id="noAnnouncements" class="no-data" style="display: none;">
+                <p>お知らせがありません</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- バックアップ管理セクション -->
-      <div class="card">
-        <div class="card-header">
-          <h2>バックアップ管理</h2>
-          <p>データベースのバックアップを作成・復元できます</p>
+        <!-- バックアップ管理セクション -->
+        <div class="card">
+          <div class="card-header">
+            <h2>バックアップ管理</h2>
+            <p>データベースのバックアップを作成・復元できます</p>
+          </div>
+
+          <div class="card-body">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+              <button type="button" id="createBackupBtn" class="btn btn-primary">
+                手動バックアップ作成
+              </button>
+              <button type="button" id="refreshBackupsBtn" class="btn btn-secondary">
+                一覧を更新
+              </button>
+            </div>
+
+            <div id="backupSuccess" class="alert alert-success" style="display: none; margin-bottom: 20px;">
+              <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <div>
+                <strong>成功</strong>
+                <p id="backupSuccessText"></p>
+              </div>
+            </div>
+
+            <div id="backupError" class="alert alert-error" style="display: none; margin-bottom: 20px;">
+              <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <div>
+                <strong>エラー</strong>
+                <p id="backupErrorText"></p>
+              </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+              <h3 style="margin-bottom: 15px;">バックアップ一覧</h3>
+              <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                自動バックアップはサーバー起動時と1時間ごとに実行されます。最大10件まで保持されます。
+              </p>
+              <div id="backupsList" class="admin-requests-list">
+                <div class="loading">読み込み中...</div>
+              </div>
+              <div id="noBackups" class="no-data" style="display: none;">
+                <p>バックアップファイルがありません</p>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="card-body">
-          <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <button type="button" id="createBackupBtn" class="btn btn-primary">
-              手動バックアップ作成
-            </button>
-            <button type="button" id="refreshBackupsBtn" class="btn btn-secondary">
-              一覧を更新
-            </button>
+        <!-- テーマ募集管理セクション -->
+        <div class="card">
+          <div class="card-header">
+            <h2>テーマ募集管理</h2>
+            <p>ユーザーから提案されたテーマを確認できます</p>
           </div>
 
-          <div id="backupSuccess" class="alert alert-success" style="display: none; margin-bottom: 20px;">
-            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <div>
-              <strong>成功</strong>
-              <p id="backupSuccessText"></p>
-            </div>
-          </div>
-
-          <div id="backupError" class="alert alert-error" style="display: none; margin-bottom: 20px;">
-            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <div>
-              <strong>エラー</strong>
-              <p id="backupErrorText"></p>
-            </div>
-          </div>
-
-          <div style="margin-top: 30px;">
-            <h3 style="margin-bottom: 15px;">バックアップ一覧</h3>
-            <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
-              自動バックアップはサーバー起動時と1時間ごとに実行されます。最大10件まで保持されます。
-            </p>
-            <div id="backupsList" class="admin-requests-list">
-              <div class="loading">読み込み中...</div>
-            </div>
-            <div id="noBackups" class="no-data" style="display: none;">
-              <p>バックアップファイルがありません</p>
+          <div class="card-body">
+            <div style="margin-bottom: 15px;">
+              <h3 style="margin-bottom: 15px;">テーマ提案一覧</h3>
+              <div id="themeRequestsList" class="admin-requests-list">
+                <div class="loading">読み込み中...</div>
+              </div>
+              <div id="noThemeRequests" class="no-data" style="display: none;">
+                <p>テーマ提案がありません</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <!-- フィードバック管理セクション -->
+        <div class="card">
+          <div class="card-header">
+            <h2>フィードバック管理</h2>
+            <p>ユーザーからのフィードバックを確認できます</p>
+          </div>
+
+          <div class="card-body">
+            <div style="margin-bottom: 15px;">
+              <h3 style="margin-bottom: 15px;">フィードバック一覧</h3>
+              <div id="feedbackList" class="admin-requests-list">
+                <div class="loading">読み込み中...</div>
+              </div>
+              <div id="noFeedback" class="no-data" style="display: none;">
+                <p>フィードバックがありません</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
 
@@ -425,15 +490,88 @@
     </footer>
   </div>
 
-  <script src="/js/admin.js"></script>
+  <!-- プレイリスト編集モーダル -->
+  <div id="editPlaylistModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>プレイリストを編集</h3>
+        <button class="modal-close" id="closeEditModal">&times;</button>
+      </div>
+      <form id="editPlaylistForm" class="form">
+        <input type="hidden" id="editPlaylistId">
+        <div class="form-group">
+          <label for="editPlaylistTitle" class="form-label required">タイトル</label>
+          <input 
+            type="text" 
+            id="editPlaylistTitle" 
+            class="form-input"
+            maxlength="200"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label for="editPlaylistDate" class="form-label">プレイリスト日付（任意）</label>
+          <input 
+            type="date" 
+            id="editPlaylistDate" 
+            class="form-input"
+          >
+          <div style="color: #666; font-size: 12px; margin-top: 5px;">
+            プレイリストの配信日や公開日を設定できます
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="editPlaylistUrl" class="form-label required">URL</label>
+          <input 
+            type="url" 
+            id="editPlaylistUrl" 
+            class="form-input"
+            maxlength="500"
+            required
+          >
+        </div>
+        <div class="form-group">
+          <label for="editPlaylistDescription" class="form-label">説明（任意）</label>
+          <textarea 
+            id="editPlaylistDescription" 
+            class="form-textarea"
+            maxlength="500"
+            rows="3"
+          ></textarea>
+          <div class="char-count">
+            <span id="editPlaylistCharCount">0</span> / 500文字
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelEditBtn">キャンセル</button>
+          <button type="submit" class="btn btn-primary">更新</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/admin.js?v=111"></script>
   <script>
+    // Service Worker を完全に削除
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch((error) => {
-          console.log('Service Worker registration failed:', error);
-        });
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+          console.log('Service Worker unregistered');
+        }
       });
+      
+      // キャッシュも完全削除
+      if ('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+          cacheNames.forEach(function(cacheName) {
+            caches.delete(cacheName);
+            console.log('Cache deleted:', cacheName);
+          });
+        });
+      }
     }
   </script>
+  <script src="/js/menu.js?v=108"></script>
 </body>
 </html>

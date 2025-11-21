@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminRequestsList = document.getElementById('adminRequestsList');
   const noAdminRequests = document.getElementById('noAdminRequests');
 
+  // タブ切り替え機能は削除（シンプルな1ページレイアウトに変更）
+
   // 統計情報の要素
   const statTotal = document.getElementById('statTotal');
   const statToday = document.getElementById('statToday');
@@ -52,12 +54,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 管理画面を表示
   function showAdminSection() {
+    console.log('=== showAdminSection called ===');
     document.body.classList.add('admin-authenticated');
     loginSection.style.display = 'none';
     adminSection.style.display = 'block';
+    
+    // すべてのセクションのデータを読み込む（シンプルな1ページレイアウト）
     loadStats();
-    loadRequests();
+    window.loadRequests();
     loadRequestStatus();
+    window.loadPlaylists();
+    window.loadAnnouncements();
+    window.loadBackups();
+    window.loadThemeRequests();
+    window.loadFeedback();
+    
+    console.log('=== showAdminSection complete ===');
   }
 
   // ログイン処理
@@ -117,11 +129,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ページネーション変数
   let currentPage = 1;
-  const itemsPerPage = 20;
+  const itemsPerPage = 10;
   let currentDate = null;
 
-  // リクエスト一覧を読み込み
-  async function loadRequests(date = null, page = 1) {
+  // リクエスト一覧を読み込み（グローバルに公開）
+  window.loadRequests = async function(date = null, page = 1) {
     try {
       currentDate = date;
       currentPage = page;
@@ -240,7 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 前へボタン
     if (pagination.page > 1) {
-      html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', ${pagination.page - 1})">« 前へ</button>`;
+      html += `<button class="btn btn-secondary btn-sm" onclick="window.loadRequests('${currentDate || ''}', ${pagination.page - 1})">« 前へ</button>`;
     }
     
     // ページ番号
@@ -253,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     if (startPage > 1) {
-      html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', 1)">1</button>`;
+      html += `<button class="btn btn-secondary btn-sm" onclick="window.loadRequests('${currentDate || ''}', 1)">1</button>`;
       if (startPage > 2) {
         html += '<span class="pagination-ellipsis">...</span>';
       }
@@ -263,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (i === pagination.page) {
         html += `<button class="btn btn-primary btn-sm" disabled>${i}</button>`;
       } else {
-        html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', ${i})">${i}</button>`;
+        html += `<button class="btn btn-secondary btn-sm" onclick="window.loadRequests('${currentDate || ''}', ${i})">${i}</button>`;
       }
     }
     
@@ -271,12 +283,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (endPage < pagination.totalPages - 1) {
         html += '<span class="pagination-ellipsis">...</span>';
       }
-      html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', ${pagination.totalPages})">${pagination.totalPages}</button>`;
+      html += `<button class="btn btn-secondary btn-sm" onclick="window.loadRequests('${currentDate || ''}', ${pagination.totalPages})">${pagination.totalPages}</button>`;
     }
     
     // 次へボタン
     if (pagination.page < pagination.totalPages) {
-      html += `<button class="btn btn-secondary btn-sm" onclick="loadRequests('${currentDate || ''}', ${pagination.page + 1})">次へ »</button>`;
+      html += `<button class="btn btn-secondary btn-sm" onclick="window.loadRequests('${currentDate || ''}', ${pagination.page + 1})">次へ »</button>`;
     }
     
     html += '</div>';
@@ -296,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response.ok) {
         loadStats();
-        loadRequests(currentDate, currentPage);
+        window.loadRequests(currentDate, currentPage);
       }
     } catch (error) {
       console.error('既読切り替えエラー:', error);
@@ -316,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (response.ok) {
         loadStats();
-        loadRequests(currentDate, currentPage);
+        window.loadRequests(currentDate, currentPage);
       }
     } catch (error) {
       console.error('削除エラー:', error);
@@ -337,13 +349,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 日付フィルター
   dateFilter.addEventListener('change', () => {
-    loadRequests(dateFilter.value, 1);
+    window.loadRequests(dateFilter.value, 1);
   });
 
   // フィルタークリア
   clearFilter.addEventListener('click', () => {
     dateFilter.value = '';
-    loadRequests(null, 1);
+    window.loadRequests(null, 1);
   });
 
   // CSVエクスポート
@@ -468,8 +480,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/settings/next-broadcast');
       const data = await response.json();
       
-      nextThemeInput.value = data.theme || '';
-      nextTimeInput.value = data.time || '';
+      if (nextThemeInput) {
+        nextThemeInput.value = data.theme || '';
+      }
+      if (nextTimeInput && data.time) {
+        nextTimeInput.value = data.time;
+      }
     } catch (error) {
       console.error('次回配信情報取得エラー:', error);
     }
@@ -498,11 +514,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
         
         if (response.ok) {
+          const successTextEl = document.getElementById('broadcastSuccessText');
+          if (data.pushSent) {
+            successTextEl.textContent = `次回配信情報を更新し、${data.pushCount}件のプッシュ通知を送信しました`;
+          } else {
+            successTextEl.textContent = '次回配信情報を更新しました';
+          }
+          
           broadcastSuccess.style.display = 'flex';
           
           setTimeout(() => {
             broadcastSuccess.style.display = 'none';
-          }, 3000);
+          }, 5000);
         } else {
           throw new Error(data.error || '更新に失敗しました');
         }
@@ -551,6 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const formData = {
         title: document.getElementById('playlistTitle').value.trim(),
+        playlist_date: document.getElementById('playlistDate').value || null,
         url: document.getElementById('playlistUrl').value.trim(),
         description: playlistDescription.value.trim()
       };
@@ -570,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
           playlistSuccess.style.display = 'flex';
           playlistForm.reset();
           playlistCharCount.textContent = '0';
-          loadPlaylists();
+          window.loadPlaylists();
           
           setTimeout(() => {
             playlistSuccess.style.display = 'none';
@@ -590,11 +614,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // プレイリスト一覧を読み込み
-  async function loadPlaylists() {
+  // プレイリスト一覧を読み込み（グローバルに公開）
+  window.loadPlaylists = async function() {
+    console.log('[loadPlaylists] Starting...');
+    const adminPlaylistsList = document.getElementById('adminPlaylistsList');
+    const noAdminPlaylists = document.getElementById('noAdminPlaylists');
+    console.log('[loadPlaylists] adminPlaylistsList element:', adminPlaylistsList);
+    console.log('[loadPlaylists] noAdminPlaylists element:', noAdminPlaylists);
+    
+    if (!adminPlaylistsList || !noAdminPlaylists) {
+      console.error('[loadPlaylists] Required elements not found!');
+      return;
+    }
+    
     try {
+      console.log('[loadPlaylists] Fetching /api/playlists...');
       const response = await fetch('/api/playlists');
+      console.log('[loadPlaylists] Response status:', response.status);
       const playlists = await response.json();
+      console.log('[loadPlaylists] Playlists count:', playlists.length);
       
       if (playlists.length === 0) {
         adminPlaylistsList.style.display = 'none';
@@ -607,7 +645,14 @@ document.addEventListener('DOMContentLoaded', () => {
       
       adminPlaylistsList.innerHTML = playlists.map(playlist => {
         const createdDate = new Date(playlist.created_at);
-        const formattedDate = `${createdDate.getFullYear()}/${String(createdDate.getMonth() + 1).padStart(2, '0')}/${String(createdDate.getDate()).padStart(2, '0')} ${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}`;
+        const formattedCreatedDate = `${createdDate.getFullYear()}/${String(createdDate.getMonth() + 1).padStart(2, '0')}/${String(createdDate.getDate()).padStart(2, '0')} ${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}`;
+        
+        // プレイリスト日付をフォーマット
+        let formattedPlaylistDate = '';
+        if (playlist.playlist_date) {
+          const playlistDate = new Date(playlist.playlist_date);
+          formattedPlaylistDate = `${playlistDate.getFullYear()}/${String(playlistDate.getMonth() + 1).padStart(2, '0')}/${String(playlistDate.getDate()).padStart(2, '0')}`;
+        }
         
         return `
           <div class="admin-request-item" data-id="${playlist.id}">
@@ -621,13 +666,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               </div>
               <div class="admin-request-actions">
+                <button class="btn btn-small btn-secondary" onclick="editPlaylist(${playlist.id})">編集</button>
                 <button class="btn btn-small btn-delete" onclick="deletePlaylist(${playlist.id})">削除</button>
               </div>
             </div>
             <div class="admin-request-meta">
+              ${formattedPlaylistDate ? `
+                <div class="meta-item">
+                  <div class="meta-label">プレイリスト日付</div>
+                  <div class="meta-value">${formattedPlaylistDate}</div>
+                </div>
+              ` : ''}
               <div class="meta-item">
                 <div class="meta-label">追加日時</div>
-                <div class="meta-value">${formattedDate}</div>
+                <div class="meta-value">${formattedCreatedDate}</div>
               </div>
             </div>
             ${playlist.description ? `
@@ -639,10 +691,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `;
       }).join('');
+      console.log('[loadPlaylists] HTML generated and set successfully');
     } catch (error) {
-      console.error('プレイリスト取得エラー:', error);
+      console.error('[loadPlaylists] Error:', error);
     }
-  }
+    console.log('[loadPlaylists] Complete');
+  };
 
   // プレイリスト削除
   window.deletePlaylist = async (id) => {
@@ -656,7 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       if (response.ok) {
-        loadPlaylists();
+        window.loadPlaylists();
       }
     } catch (error) {
       console.error('削除エラー:', error);
@@ -673,16 +727,29 @@ document.addEventListener('DOMContentLoaded', () => {
   const backupError = document.getElementById('backupError');
   const backupErrorText = document.getElementById('backupErrorText');
 
-  // バックアップ一覧を読み込む
-  async function loadBackups() {
+  // バックアップ一覧を読み込む（グローバルに公開）
+  window.loadBackups = async function() {
+    console.log('[loadBackups] Starting...');
+    const backupsList = document.getElementById('backupsList');
+    const noBackups = document.getElementById('noBackups');
+    console.log('[loadBackups] Elements:', { backupsList, noBackups });
+    
+    if (!backupsList || !noBackups) {
+      console.error('[loadBackups] Required elements not found!');
+      return;
+    }
+    
     try {
+      console.log('[loadBackups] Fetching /api/admin/backups...');
       const response = await fetch('/api/admin/backups');
+      console.log('[loadBackups] Response status:', response.status);
       
       if (!response.ok) {
         throw new Error('バックアップ一覧の取得に失敗しました');
       }
       
       const backups = await response.json();
+      console.log('[loadBackups] Backups count:', backups.length);
       
       if (backups.length === 0) {
         backupsList.style.display = 'none';
@@ -690,8 +757,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      backupsList.style.display = 'block';
       noBackups.style.display = 'none';
+      backupsList.style.display = 'flex';
       
       backupsList.innerHTML = backups.map(backup => {
         const date = new Date(backup.time);
@@ -735,11 +802,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
       
+      console.log('[loadBackups] HTML generated and set successfully');
     } catch (error) {
-      console.error('バックアップ一覧読み込みエラー:', error);
+      console.error('[loadBackups] Error:', error);
       backupsList.innerHTML = '<div class="loading">エラーが発生しました</div>';
     }
-  }
+    console.log('[loadBackups] Complete');
+  };
 
   // 手動バックアップ作成
   createBackupBtn.addEventListener('click', async () => {
@@ -763,7 +832,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
         
         // 一覧を更新
-        loadBackups();
+        window.loadBackups();
       } else {
         throw new Error(data.error);
       }
@@ -779,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // バックアップ一覧更新
   refreshBackupsBtn.addEventListener('click', () => {
-    loadBackups();
+    window.loadBackups();
   });
 
   // バックアップから復元
@@ -841,16 +910,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // お知らせ一覧を読み込む
-  async function loadAnnouncements() {
+  // お知らせ一覧を読み込む（グローバルに公開）
+  window.loadAnnouncements = async function() {
+    console.log('[loadAnnouncements] Starting...');
+    const announcementsList = document.getElementById('announcementsList');
+    const noAnnouncements = document.getElementById('noAnnouncements');
+    console.log('[loadAnnouncements] Elements:', { announcementsList, noAnnouncements });
+    
+    if (!announcementsList || !noAnnouncements) {
+      console.error('[loadAnnouncements] Required elements not found!');
+      return;
+    }
+    
     try {
+      console.log('[loadAnnouncements] Fetching /api/announcements...');
       const response = await fetch('/api/announcements');
+      console.log('[loadAnnouncements] Response status:', response.status);
       
       if (!response.ok) {
         throw new Error('お知らせ一覧の取得に失敗しました');
       }
       
       const announcements = await response.json();
+      console.log('[loadAnnouncements] Announcements count:', announcements.length);
       
       if (announcements.length === 0) {
         announcementsList.style.display = 'none';
@@ -858,8 +940,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       
-      announcementsList.style.display = 'block';
       noAnnouncements.style.display = 'none';
+      announcementsList.style.display = 'flex';
       
       announcementsList.innerHTML = announcements.map(announcement => {
         return `
@@ -891,11 +973,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       });
       
+      console.log('[loadAnnouncements] HTML generated and set successfully');
     } catch (error) {
-      console.error('お知らせ一覧読み込みエラー:', error);
+      console.error('[loadAnnouncements] Error:', error);
       announcementsList.innerHTML = '<div class="loading">エラーが発生しました</div>';
     }
-  }
+    console.log('[loadAnnouncements] Complete');
+  };
 
   // お知らせ投稿フォーム送信
   if (announcementForm) {
@@ -937,7 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
           announcementCharCount.textContent = '0';
           
           // 一覧を更新
-          loadAnnouncements();
+          window.loadAnnouncements();
           
           setTimeout(() => {
             announcementSuccess.style.display = 'none';
@@ -963,23 +1047,381 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       if (response.ok) {
-        loadAnnouncements();
+        window.loadAnnouncements();
       }
     } catch (error) {
       console.error('削除エラー:', error);
     }
   }
 
+  // === テーマ募集管理機能 ===
+  window.loadThemeRequests = async function() {
+    console.log('[loadThemeRequests] Starting...');
+    const themeRequestsList = document.getElementById('themeRequestsList');
+    const noThemeRequests = document.getElementById('noThemeRequests');
+    
+    if (!themeRequestsList || !noThemeRequests) {
+      console.error('[loadThemeRequests] Required elements not found!');
+      return;
+    }
+    
+    try {
+      console.log('[loadThemeRequests] Fetching /api/admin/theme-suggestions...');
+      const response = await fetch('/api/admin/theme-suggestions');
+      console.log('[loadThemeRequests] Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error('テーマ募集一覧の取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      const themeRequests = data.suggestions || [];
+      console.log('[loadThemeRequests] Theme requests count:', themeRequests.length);
+      
+      if (themeRequests.length === 0) {
+        themeRequestsList.style.display = 'none';
+        noThemeRequests.style.display = 'block';
+        return;
+      }
+      
+      noThemeRequests.style.display = 'none';
+      themeRequestsList.style.display = 'flex';
+      
+      themeRequestsList.innerHTML = themeRequests.map(theme => {
+        const statusBadge = theme.status === 'approved' ? '<span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">採用</span>' :
+                           theme.status === 'rejected' ? '<span style="background: #f44336; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">不採用</span>' :
+                           '<span style="background: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">検討中</span>';
+        
+        const readBadge = theme.is_read ? '' : '<span style="background: #2196F3; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">未読</span>';
+        
+        return `
+          <div class="request-item" style="${theme.is_read ? '' : 'background-color: #f0f7ff;'}">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <strong style="font-size: 16px;">${theme.theme_title}</strong>
+                ${statusBadge}
+                ${readBadge}
+                <span class="request-time">${theme.created_at}</span>
+              </div>
+              <div style="color: #666; font-size: 14px; margin-bottom: 8px;">
+                <strong>提案内容:</strong> ${theme.theme_description}
+              </div>
+              ${theme.example_songs ? `<div style="color: #666; font-size: 14px; margin-bottom: 8px;"><strong>例:</strong> ${theme.example_songs}</div>` : ''}
+              <div style="color: #666; font-size: 14px;">
+                <strong>提案者:</strong> ${theme.nickname}
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+              <select class="form-input" style="width: 120px;" onchange="updateThemeStatus(${theme.id}, this.value)">
+                <option value="pending" ${theme.status === 'pending' ? 'selected' : ''}>検討中</option>
+                <option value="approved" ${theme.status === 'approved' ? 'selected' : ''}>採用</option>
+                <option value="rejected" ${theme.status === 'rejected' ? 'selected' : ''}>不採用</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="toggleThemeRead(${theme.id}, ${theme.is_read ? 0 : 1})">
+                ${theme.is_read ? '未読にする' : '既読にする'}
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteThemeRequest(${theme.id})">
+                削除
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      console.log('[loadThemeRequests] HTML generated and set successfully');
+    } catch (error) {
+      console.error('[loadThemeRequests] Error:', error);
+      themeRequestsList.innerHTML = '<div class="loading">エラーが発生しました</div>';
+    }
+    console.log('[loadThemeRequests] Complete');
+  };
+
+  window.updateThemeStatus = async function(id, status) {
+    try {
+      const response = await fetch(`/api/admin/theme-suggestions/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      
+      if (response.ok) {
+        window.loadThemeRequests();
+      }
+    } catch (error) {
+      console.error('ステータス更新エラー:', error);
+    }
+  };
+
+  window.toggleThemeRead = async function(id, isRead) {
+    try {
+      const response = await fetch(`/api/admin/theme-suggestions/${id}/read`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_read: isRead })
+      });
+      
+      if (response.ok) {
+        window.loadThemeRequests();
+      }
+    } catch (error) {
+      console.error('既読状態更新エラー:', error);
+    }
+  };
+
+  window.deleteThemeRequest = async function(id) {
+    if (!confirm('このテーマ提案を削除しますか？')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/theme-suggestions/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        window.loadThemeRequests();
+      }
+    } catch (error) {
+      console.error('削除エラー:', error);
+    }
+  };
+
+  // === フィードバック管理機能 ===
+  window.loadFeedback = async function() {
+    console.log('[loadFeedback] Starting...');
+    const feedbackList = document.getElementById('feedbackList');
+    const noFeedback = document.getElementById('noFeedback');
+    
+    if (!feedbackList || !noFeedback) {
+      console.error('[loadFeedback] Required elements not found!');
+      return;
+    }
+    
+    try {
+      console.log('[loadFeedback] Fetching /api/admin/feedback...');
+      const response = await fetch('/api/admin/feedback');
+      console.log('[loadFeedback] Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error('フィードバック一覧の取得に失敗しました');
+      }
+      
+      const feedback = await response.json();
+      console.log('[loadFeedback] Feedback count:', feedback.length);
+      
+      if (feedback.length === 0) {
+        feedbackList.style.display = 'none';
+        noFeedback.style.display = 'block';
+        return;
+      }
+      
+      noFeedback.style.display = 'none';
+      feedbackList.style.display = 'flex';
+      
+      feedbackList.innerHTML = feedback.map(item => {
+        const typeLabel = item.feedback_type === 'bug' ? 'バグ報告' :
+                         item.feedback_type === 'feature' ? '機能要望' :
+                         item.feedback_type === 'other' ? 'その他' : item.feedback_type;
+        
+        const typeBadgeColor = item.feedback_type === 'bug' ? '#f44336' :
+                              item.feedback_type === 'feature' ? '#4CAF50' : '#9E9E9E';
+        
+        const readBadge = item.is_read ? '' : '<span style="background: #2196F3; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">未読</span>';
+        
+        return `
+          <div class="request-item" style="${item.is_read ? '' : 'background-color: #f0f7ff;'}">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="background: ${typeBadgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${typeLabel}</span>
+                ${readBadge}
+                <span class="request-time">${item.created_at}</span>
+              </div>
+              <div style="color: #333; font-size: 14px; margin-bottom: 8px; white-space: pre-wrap;">
+                ${item.content}
+              </div>
+              <div style="color: #666; font-size: 14px;">
+                <strong>投稿者:</strong> ${item.nickname}
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+              <button class="btn btn-secondary btn-sm" onclick="toggleFeedbackRead(${item.id}, ${item.is_read ? 0 : 1})">
+                ${item.is_read ? '未読にする' : '既読にする'}
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteFeedback(${item.id})">
+                削除
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      console.log('[loadFeedback] HTML generated and set successfully');
+    } catch (error) {
+      console.error('[loadFeedback] Error:', error);
+      feedbackList.innerHTML = '<div class="loading">エラーが発生しました</div>';
+    }
+    console.log('[loadFeedback] Complete');
+  };
+
+  window.toggleFeedbackRead = async function(id, isRead) {
+    try {
+      const response = await fetch(`/api/admin/feedback/${id}/read`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_read: isRead })
+      });
+      
+      if (response.ok) {
+        window.loadFeedback();
+      }
+    } catch (error) {
+      console.error('既読状態更新エラー:', error);
+    }
+  };
+
+  window.deleteFeedback = async function(id) {
+    if (!confirm('このフィードバックを削除しますか？')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/feedback/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        window.loadFeedback();
+      }
+    } catch (error) {
+      console.error('削除エラー:', error);
+    }
+  };
+
+  // === プレイリスト編集機能 ===
+  const editPlaylistModal = document.getElementById('editPlaylistModal');
+  const editPlaylistForm = document.getElementById('editPlaylistForm');
+  const editPlaylistId = document.getElementById('editPlaylistId');
+  const editPlaylistTitle = document.getElementById('editPlaylistTitle');
+  const editPlaylistDate = document.getElementById('editPlaylistDate');
+  const editPlaylistUrl = document.getElementById('editPlaylistUrl');
+  const editPlaylistDescription = document.getElementById('editPlaylistDescription');
+  const editPlaylistCharCount = document.getElementById('editPlaylistCharCount');
+  const editPlaylistSuccess = document.getElementById('editPlaylistSuccess');
+  const editPlaylistError = document.getElementById('editPlaylistError');
+  const editPlaylistErrorText = document.getElementById('editPlaylistErrorText');
+  const closeEditModal = document.getElementById('closeEditModal');
+  const cancelEditBtn = document.getElementById('cancelEditBtn');
+  const saveEditBtn = document.getElementById('saveEditBtn');
+
+  // 文字数カウント
+  if (editPlaylistDescription) {
+    editPlaylistDescription.addEventListener('input', () => {
+      const length = editPlaylistDescription.value.length;
+      editPlaylistCharCount.textContent = length;
+      
+      if (length > 500) {
+        editPlaylistCharCount.style.color = 'var(--error-color)';
+      } else {
+        editPlaylistCharCount.style.color = 'var(--text-light)';
+      }
+    });
+  }
+
+  // プレイリスト編集
+  window.editPlaylist = async (id) => {
+    try {
+      // プレイリストデータを取得
+      const response = await fetch('/api/playlists');
+      const playlists = await response.json();
+      const playlist = playlists.find(p => p.id === id);
+      
+      if (!playlist) {
+        alert('プレイリストが見つかりません');
+        return;
+      }
+      
+      // フォームに値を設定
+      editPlaylistId.value = playlist.id;
+      editPlaylistTitle.value = playlist.title;
+      editPlaylistDate.value = playlist.playlist_date || '';
+      editPlaylistUrl.value = playlist.url;
+      editPlaylistDescription.value = playlist.description || '';
+      editPlaylistCharCount.textContent = (playlist.description || '').length;
+      
+      // エラー・成功メッセージをリセット
+      editPlaylistSuccess.style.display = 'none';
+      editPlaylistError.style.display = 'none';
+      
+      // モーダルを表示
+      editPlaylistModal.style.display = 'flex';
+    } catch (error) {
+      console.error('プレイリスト取得エラー:', error);
+      alert('プレイリストの取得に失敗しました');
+    }
+  };
+
+  // モーダルを閉じる
+  function closeModal() {
+    editPlaylistModal.style.display = 'none';
+  }
+
+  closeEditModal.addEventListener('click', closeModal);
+  cancelEditBtn.addEventListener('click', closeModal);
+  
+  // モーダル背景クリックで閉じる
+  editPlaylistModal.addEventListener('click', (e) => {
+    if (e.target === editPlaylistModal) {
+      closeModal();
+    }
+  });
+
+  // 編集フォーム送信
+  editPlaylistForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    editPlaylistSuccess.style.display = 'none';
+    editPlaylistError.style.display = 'none';
+    
+    saveEditBtn.disabled = true;
+    saveEditBtn.textContent = '更新中...';
+    
+    const id = editPlaylistId.value;
+    const formData = {
+      title: editPlaylistTitle.value.trim(),
+      playlist_date: editPlaylistDate.value || null,
+      url: editPlaylistUrl.value.trim(),
+      description: editPlaylistDescription.value.trim()
+    };
+    
+    try {
+      const response = await fetch(`/api/admin/playlists/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        editPlaylistSuccess.style.display = 'flex';
+        window.loadPlaylists();
+        
+        setTimeout(() => {
+          closeModal();
+          editPlaylistSuccess.style.display = 'none';
+        }, 2000);
+      } else {
+        editPlaylistErrorText.textContent = data.error || 'プレイリストの更新に失敗しました';
+        editPlaylistError.style.display = 'flex';
+      }
+    } catch (error) {
+      console.error('プレイリスト更新エラー:', error);
+      editPlaylistErrorText.textContent = 'ネットワークエラーが発生しました';
+      editPlaylistError.style.display = 'flex';
+    } finally {
+      saveEditBtn.disabled = false;
+      saveEditBtn.textContent = '更新';
+    }
+  });
+
   // 初期化
   checkAuth();
-  
-  // 認証後にプレイリスト、バックアップ、次回配信情報、お知らせを読み込む
-  const originalShowAdminSection = showAdminSection;
-  showAdminSection = function() {
-    originalShowAdminSection();
-    loadPlaylists();
-    loadBackups();
-    loadNextBroadcastInfo();
-    loadAnnouncements();
-  };
 });

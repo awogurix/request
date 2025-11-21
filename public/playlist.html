@@ -8,11 +8,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="プレイリスト">
-  <title>プレイリスト | ラジオ番組</title>
+  <title>プレイリスト | ラジオっぽい部屋 by clubhouse</title>
   
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" href="/icons/icon-192x192.png">
-  <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+  <link rel="manifest" href="/manifest.json?v=15">
+  <link rel="icon" type="image/x-icon" href="/icons/favicon.ico?v=15">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png?v=15">
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png?v=15">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,25 +29,97 @@
             <path d="M2 16.1A5 5 0 0 1 5.9 20M2 12.05A9 9 0 0 1 9.95 20M2 8V6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"></path>
             <line x1="2" y1="20" x2="2.01" y2="20"></line>
           </svg>
-          <h1>曲リクエスト</h1>
+          <h1><span class="logo-main">ラジオっぽい部屋</span> <span class="logo-sub">by clubhouse</span></h1>
+          <button id="jingleBtn" class="jingle-link" title="番組ジングルを見る" aria-label="番組ジングルを見る">
+            🎵 ジングル
+          </button>
         </div>
-        <nav class="nav">
+        <button class="menu-toggle" id="menuToggle" aria-label="メニューを開く">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <nav class="nav" id="mainNav">
           <a href="/" class="nav-link">リクエスト</a>
-          <a href="/today.html" class="nav-link">今日のリクエスト</a>
-          <a href="/theme-request.html" class="nav-link">テーマリクエスト</a>
+          <a href="/today.html" class="nav-link">最新のリクエスト</a>
+          <a href="/theme-request.html" class="nav-link">テーマ募集</a>
+          <a href="/feedback.html" class="nav-link">フィードバック</a>
           <a href="/playlist.html" class="nav-link active">プレイリスト</a>
           <a href="/admin.html" class="nav-link">管理画面</a>
         </nav>
       </div>
     </header>
+    <div class="menu-overlay" id="menuOverlay"></div>
 
     <main class="main">
-      <div class="card">
-        <div class="card-header">
-          <h2>プレイリスト</h2>
+      <!-- ヒーロー画像セクション -->
+      <div class="playlist-hero">
+        <img src="/images/wave-pattern.png" alt="音波パターン" class="hero-image">
+        <div class="hero-overlay">
+          <h2>🎵 プレイリスト</h2>
           <p>番組で紹介した曲やおすすめのプレイリストをご紹介します</p>
         </div>
+      </div>
 
+      <!-- 表示切り替えボタン -->
+      <div class="view-toggle">
+        <button id="calendarViewBtn" class="view-toggle-btn active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          カレンダー表示
+        </button>
+        <button id="listViewBtn" class="view-toggle-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          リスト表示
+        </button>
+      </div>
+
+      <!-- カレンダービュー -->
+      <div id="calendarView" class="calendar-view">
+        <div class="calendar-header">
+          <button id="prevMonth" class="calendar-nav-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <h3 id="currentMonth" class="calendar-month-title"></h3>
+          <button id="nextMonth" class="calendar-nav-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+        
+        <div id="calendarContainer" class="calendar-grid">
+          <div class="calendar-day-header">日</div>
+          <div class="calendar-day-header">月</div>
+          <div class="calendar-day-header">火</div>
+          <div class="calendar-day-header">水</div>
+          <div class="calendar-day-header">木</div>
+          <div class="calendar-day-header">金</div>
+          <div class="calendar-day-header">土</div>
+        </div>
+
+        <!-- 選択された日付のプレイリスト表示 -->
+        <div id="selectedDatePlaylists" class="selected-date-playlists" style="display: none;">
+          <h4 id="selectedDateTitle"></h4>
+          <div id="selectedDateContent"></div>
+        </div>
+      </div>
+
+      <!-- リストビュー -->
+      <div id="listView" class="list-view" style="display: none;">
         <div id="playlistsList" class="playlists-list">
           <div class="loading">読み込み中...</div>
         </div>
@@ -59,13 +132,18 @@
         </div>
       </div>
 
-      <div class="info-card">
-        <h3>プレイリストについて</h3>
-        <ul class="info-list">
-          <li>番組で紹介した曲のプレイリストをお楽しみいただけます</li>
-          <li>Spotify、Apple Music、YouTubeなど様々なプラットフォームのリンクを掲載</li>
-          <li>定期的に更新されますのでお楽しみに</li>
-        </ul>
+      <!-- 情報カード with 画像 -->
+      <div class="info-card-with-image">
+        <img src="/images/radio-studio.png" alt="ラジオスタジオ" class="info-card-image">
+        <div class="info-card-content">
+          <h3>🎧 プレイリストについて</h3>
+          <ul class="info-list">
+            <li>📅 カレンダーから日付を選んでプレイリストを確認できます</li>
+            <li>🎵 番組で紹介した曲のプレイリストをお楽しみいただけます</li>
+            <li>🔗 Spotify、Apple Music、YouTubeなど様々なプラットフォームのリンクを掲載</li>
+            <li>✨ 定期的に更新されますのでお楽しみに</li>
+          </ul>
+        </div>
       </div>
     </main>
 
@@ -74,7 +152,32 @@
     </footer>
   </div>
 
-  <script src="/js/playlist.js"></script>
+  <!-- ジングルモーダル -->
+  <div id="jingleModal" class="jingle-modal">
+    <div class="jingle-modal-overlay"></div>
+    <div class="jingle-modal-content">
+      <button class="jingle-modal-close" aria-label="閉じる">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      <div class="jingle-modal-header">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <h3>番組ジングル</h3>
+      </div>
+      <div class="jingle-modal-body">
+        <video id="jingleVideo" class="jingle-modal-video" controls poster="/icons/icon-512x512.png">
+          <source src="/media/jingle.mp4" type="video/mp4">
+          お使いのブラウザは動画タグをサポートしていません。
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/playlist.js?v=15"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -84,5 +187,6 @@
       });
     }
   </script>
+  <script src="/js/menu.js?v=24"></script>
 </body>
 </html>

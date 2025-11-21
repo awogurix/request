@@ -1,5 +1,5 @@
 // Service Worker for PWA
-const CACHE_NAME = 'radio-request-v1';
+const CACHE_NAME = 'radio-request-v106';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -11,6 +11,7 @@ const urlsToCache = [
   '/js/today.js',
   '/js/playlist.js',
   '/js/admin.js',
+  '/js/menu.js',
   '/manifest.json'
 ];
 
@@ -46,6 +47,12 @@ self.addEventListener('activate', (event) => {
 
 // フェッチ時（ネットワーク優先、フォールバックとしてキャッシュ）
 self.addEventListener('fetch', (event) => {
+  // Only cache GET requests (Cache API doesn't support POST, PUT, DELETE, etc.)
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
@@ -76,7 +83,7 @@ self.addEventListener('fetch', (event) => {
 // プッシュ通知
 self.addEventListener('push', (event) => {
   let data = {
-    title: 'ラジオ曲リクエスト',
+    title: 'ラジオっぽい部屋 by clubhouse',
     body: '新しい通知があります',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
@@ -105,7 +112,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'ラジオ曲リクエスト', options)
+    self.registration.showNotification(data.title || 'ラジオっぽい部屋 by clubhouse', options)
   );
 });
 
