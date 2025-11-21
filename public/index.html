@@ -271,16 +271,24 @@
   
   <!-- PWA Service Worker Registration -->
   <script>
+    // Service Worker を完全に削除
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            console.log('Service Worker registered successfully:', registration.scope);
-          })
-          .catch((error) => {
-            console.log('Service Worker registration failed:', error);
-          });
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+          console.log('Service Worker unregistered');
+        }
       });
+      
+      // キャッシュも完全削除
+      if ('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+          cacheNames.forEach(function(cacheName) {
+            caches.delete(cacheName);
+            console.log('Cache deleted:', cacheName);
+          });
+        });
+      }
     }
   </script>
 

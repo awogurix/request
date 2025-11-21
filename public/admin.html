@@ -654,16 +654,28 @@
     </footer>
   </div>
 
-  <script src="/js/admin.js?v=106"></script>
+  <script src="/js/admin.js?v=107"></script>
   <script>
+    // Service Worker を完全に削除
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch((error) => {
-          console.log('Service Worker registration failed:', error);
-        });
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+          console.log('Service Worker unregistered');
+        }
       });
+      
+      // キャッシュも完全削除
+      if ('caches' in window) {
+        caches.keys().then(function(cacheNames) {
+          cacheNames.forEach(function(cacheName) {
+            caches.delete(cacheName);
+            console.log('Cache deleted:', cacheName);
+          });
+        });
+      }
     }
   </script>
-  <script src="/js/menu.js?v=100"></script>
+  <script src="/js/menu.js?v=107"></script>
 </body>
 </html>
