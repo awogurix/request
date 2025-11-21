@@ -553,6 +553,50 @@ app.delete('/api/admin/theme-suggestions/:id', isAuthenticated, (req, res) => {
   });
 });
 
+// フィードバック一覧取得（管理者のみ）
+app.get('/api/admin/feedback', isAuthenticated, (req, res) => {
+  const sql = `
+    SELECT id, feedback_type, content, nickname, created_at, is_read
+    FROM feedback
+    ORDER BY created_at DESC
+  `;
+  
+  db.all(sql, [], (err, rows) => {
+    if (err) {
+      console.error('データベースエラー:', err);
+      return res.status(500).json({ error: 'データ取得に失敗しました' });
+    }
+    res.json(rows);
+  });
+});
+
+// フィードバックの既読状態切り替え（管理者のみ）
+app.patch('/api/admin/feedback/:id/read', isAuthenticated, (req, res) => {
+  const { id } = req.params;
+  const { is_read } = req.body;
+  
+  db.run('UPDATE feedback SET is_read = ? WHERE id = ?', [is_read ? 1 : 0, id], function(err) {
+    if (err) {
+      console.error('データベースエラー:', err);
+      return res.status(500).json({ error: '更新に失敗しました' });
+    }
+    res.json({ success: true });
+  });
+});
+
+// フィードバック削除（管理者のみ）
+app.delete('/api/admin/feedback/:id', isAuthenticated, (req, res) => {
+  const { id } = req.params;
+  
+  db.run('DELETE FROM feedback WHERE id = ?', [id], function(err) {
+    if (err) {
+      console.error('データベースエラー:', err);
+      return res.status(500).json({ error: '削除に失敗しました' });
+    }
+    res.json({ success: true });
+  });
+});
+
 // CSVエクスポート（管理者のみ）
 app.get('/api/admin/export', isAuthenticated, (req, res) => {
   const { date } = req.query;

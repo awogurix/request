@@ -66,6 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.loadPlaylists();
     window.loadAnnouncements();
     window.loadBackups();
+    window.loadThemeRequests();
+    window.loadFeedback();
     
     console.log('=== showAdminSection complete ===');
   }
@@ -1116,6 +1118,245 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // === テーマ募集管理機能 ===
+  window.loadThemeRequests = async function() {
+    console.log('[loadThemeRequests] Starting...');
+    const themeRequestsList = document.getElementById('themeRequestsList');
+    const noThemeRequests = document.getElementById('noThemeRequests');
+    
+    if (!themeRequestsList || !noThemeRequests) {
+      console.error('[loadThemeRequests] Required elements not found!');
+      return;
+    }
+    
+    try {
+      console.log('[loadThemeRequests] Fetching /api/admin/theme-suggestions...');
+      const response = await fetch('/api/admin/theme-suggestions');
+      console.log('[loadThemeRequests] Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error('テーマ募集一覧の取得に失敗しました');
+      }
+      
+      const data = await response.json();
+      const themeRequests = data.suggestions || [];
+      console.log('[loadThemeRequests] Theme requests count:', themeRequests.length);
+      
+      if (themeRequests.length === 0) {
+        themeRequestsList.style.display = 'none';
+        noThemeRequests.style.display = 'block';
+        return;
+      }
+      
+      noThemeRequests.style.display = 'none';
+      themeRequestsList.style.display = 'flex';
+      
+      themeRequestsList.innerHTML = themeRequests.map(theme => {
+        const statusBadge = theme.status === 'approved' ? '<span style="background: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">採用</span>' :
+                           theme.status === 'rejected' ? '<span style="background: #f44336; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">不採用</span>' :
+                           '<span style="background: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">検討中</span>';
+        
+        const readBadge = theme.is_read ? '' : '<span style="background: #2196F3; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">未読</span>';
+        
+        return `
+          <div class="request-item" style="${theme.is_read ? '' : 'background-color: #f0f7ff;'}">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <strong style="font-size: 16px;">${theme.theme_title}</strong>
+                ${statusBadge}
+                ${readBadge}
+                <span class="request-time">${theme.created_at}</span>
+              </div>
+              <div style="color: #666; font-size: 14px; margin-bottom: 8px;">
+                <strong>提案内容:</strong> ${theme.theme_description}
+              </div>
+              ${theme.example_songs ? `<div style="color: #666; font-size: 14px; margin-bottom: 8px;"><strong>例:</strong> ${theme.example_songs}</div>` : ''}
+              <div style="color: #666; font-size: 14px;">
+                <strong>提案者:</strong> ${theme.nickname}
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+              <select class="form-input" style="width: 120px;" onchange="updateThemeStatus(${theme.id}, this.value)">
+                <option value="pending" ${theme.status === 'pending' ? 'selected' : ''}>検討中</option>
+                <option value="approved" ${theme.status === 'approved' ? 'selected' : ''}>採用</option>
+                <option value="rejected" ${theme.status === 'rejected' ? 'selected' : ''}>不採用</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" onclick="toggleThemeRead(${theme.id}, ${theme.is_read ? 0 : 1})">
+                ${theme.is_read ? '未読にする' : '既読にする'}
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteThemeRequest(${theme.id})">
+                削除
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      console.log('[loadThemeRequests] HTML generated and set successfully');
+    } catch (error) {
+      console.error('[loadThemeRequests] Error:', error);
+      themeRequestsList.innerHTML = '<div class="loading">エラーが発生しました</div>';
+    }
+    console.log('[loadThemeRequests] Complete');
+  };
+
+  window.updateThemeStatus = async function(id, status) {
+    try {
+      const response = await fetch(`/api/admin/theme-suggestions/${id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      
+      if (response.ok) {
+        window.loadThemeRequests();
+      }
+    } catch (error) {
+      console.error('ステータス更新エラー:', error);
+    }
+  };
+
+  window.toggleThemeRead = async function(id, isRead) {
+    try {
+      const response = await fetch(`/api/admin/theme-suggestions/${id}/read`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_read: isRead })
+      });
+      
+      if (response.ok) {
+        window.loadThemeRequests();
+      }
+    } catch (error) {
+      console.error('既読状態更新エラー:', error);
+    }
+  };
+
+  window.deleteThemeRequest = async function(id) {
+    if (!confirm('このテーマ提案を削除しますか？')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/theme-suggestions/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        window.loadThemeRequests();
+      }
+    } catch (error) {
+      console.error('削除エラー:', error);
+    }
+  };
+
+  // === フィードバック管理機能 ===
+  window.loadFeedback = async function() {
+    console.log('[loadFeedback] Starting...');
+    const feedbackList = document.getElementById('feedbackList');
+    const noFeedback = document.getElementById('noFeedback');
+    
+    if (!feedbackList || !noFeedback) {
+      console.error('[loadFeedback] Required elements not found!');
+      return;
+    }
+    
+    try {
+      console.log('[loadFeedback] Fetching /api/admin/feedback...');
+      const response = await fetch('/api/admin/feedback');
+      console.log('[loadFeedback] Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error('フィードバック一覧の取得に失敗しました');
+      }
+      
+      const feedback = await response.json();
+      console.log('[loadFeedback] Feedback count:', feedback.length);
+      
+      if (feedback.length === 0) {
+        feedbackList.style.display = 'none';
+        noFeedback.style.display = 'block';
+        return;
+      }
+      
+      noFeedback.style.display = 'none';
+      feedbackList.style.display = 'flex';
+      
+      feedbackList.innerHTML = feedback.map(item => {
+        const typeLabel = item.feedback_type === 'bug' ? 'バグ報告' :
+                         item.feedback_type === 'feature' ? '機能要望' :
+                         item.feedback_type === 'other' ? 'その他' : item.feedback_type;
+        
+        const typeBadgeColor = item.feedback_type === 'bug' ? '#f44336' :
+                              item.feedback_type === 'feature' ? '#4CAF50' : '#9E9E9E';
+        
+        const readBadge = item.is_read ? '' : '<span style="background: #2196F3; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 8px;">未読</span>';
+        
+        return `
+          <div class="request-item" style="${item.is_read ? '' : 'background-color: #f0f7ff;'}">
+            <div style="flex: 1;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="background: ${typeBadgeColor}; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">${typeLabel}</span>
+                ${readBadge}
+                <span class="request-time">${item.created_at}</span>
+              </div>
+              <div style="color: #333; font-size: 14px; margin-bottom: 8px; white-space: pre-wrap;">
+                ${item.content}
+              </div>
+              <div style="color: #666; font-size: 14px;">
+                <strong>投稿者:</strong> ${item.nickname}
+              </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-direction: column;">
+              <button class="btn btn-secondary btn-sm" onclick="toggleFeedbackRead(${item.id}, ${item.is_read ? 0 : 1})">
+                ${item.is_read ? '未読にする' : '既読にする'}
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="deleteFeedback(${item.id})">
+                削除
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      console.log('[loadFeedback] HTML generated and set successfully');
+    } catch (error) {
+      console.error('[loadFeedback] Error:', error);
+      feedbackList.innerHTML = '<div class="loading">エラーが発生しました</div>';
+    }
+    console.log('[loadFeedback] Complete');
+  };
+
+  window.toggleFeedbackRead = async function(id, isRead) {
+    try {
+      const response = await fetch(`/api/admin/feedback/${id}/read`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_read: isRead })
+      });
+      
+      if (response.ok) {
+        window.loadFeedback();
+      }
+    } catch (error) {
+      console.error('既読状態更新エラー:', error);
+    }
+  };
+
+  window.deleteFeedback = async function(id) {
+    if (!confirm('このフィードバックを削除しますか？')) return;
+    
+    try {
+      const response = await fetch(`/api/admin/feedback/${id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        window.loadFeedback();
+      }
+    } catch (error) {
+      console.error('削除エラー:', error);
+    }
+  };
+
   // === プレイリスト編集機能 ===
   const editPlaylistModal = document.getElementById('editPlaylistModal');
   const editPlaylistForm = document.getElementById('editPlaylistForm');
@@ -1247,14 +1488,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 初期化
   checkAuth();
-  
-  // 認証後にプレイリスト、バックアップ、次回配信情報、お知らせを読み込む
-  const originalShowAdminSection = showAdminSection;
-  showAdminSection = function() {
-    originalShowAdminSection();
-    window.loadPlaylists();
-    window.loadBackups();
-    loadNextBroadcastInfo();
-    window.loadAnnouncements();
-  };
 });
