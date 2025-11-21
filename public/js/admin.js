@@ -638,7 +638,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const formData = {
         title: document.getElementById('playlistTitle').value.trim(),
-        playlist_date: document.getElementById('playlistDate').value,
         url: document.getElementById('playlistUrl').value.trim(),
         description: playlistDescription.value.trim()
       };
@@ -711,13 +710,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const createdDate = new Date(playlist.created_at);
         const formattedCreatedDate = `${createdDate.getFullYear()}/${String(createdDate.getMonth() + 1).padStart(2, '0')}/${String(createdDate.getDate()).padStart(2, '0')} ${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}`;
         
-        // プレイリスト日付をフォーマット
-        let formattedPlaylistDate = '';
-        if (playlist.playlist_date) {
-          const playlistDate = new Date(playlist.playlist_date);
-          formattedPlaylistDate = `${playlistDate.getFullYear()}/${String(playlistDate.getMonth() + 1).padStart(2, '0')}/${String(playlistDate.getDate()).padStart(2, '0')}`;
-        }
-        
         return `
           <div class="admin-request-item" data-id="${playlist.id}">
             <div class="admin-request-header">
@@ -735,12 +727,6 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             </div>
             <div class="admin-request-meta">
-              ${formattedPlaylistDate ? `
-                <div class="meta-item">
-                  <div class="meta-label">プレイリスト日付</div>
-                  <div class="meta-value">${formattedPlaylistDate}</div>
-                </div>
-              ` : ''}
               <div class="meta-item">
                 <div class="meta-label">追加日時</div>
                 <div class="meta-value">${formattedCreatedDate}</div>
@@ -1362,7 +1348,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const editPlaylistForm = document.getElementById('editPlaylistForm');
   const editPlaylistId = document.getElementById('editPlaylistId');
   const editPlaylistTitle = document.getElementById('editPlaylistTitle');
-  const editPlaylistDate = document.getElementById('editPlaylistDate');
   const editPlaylistUrl = document.getElementById('editPlaylistUrl');
   const editPlaylistDescription = document.getElementById('editPlaylistDescription');
   const editPlaylistCharCount = document.getElementById('editPlaylistCharCount');
@@ -1403,7 +1388,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // フォームに値を設定
       editPlaylistId.value = playlist.id;
       editPlaylistTitle.value = playlist.title;
-      editPlaylistDate.value = playlist.playlist_date || '';
       editPlaylistUrl.value = playlist.url;
       editPlaylistDescription.value = playlist.description || '';
       editPlaylistCharCount.textContent = (playlist.description || '').length;
@@ -1448,7 +1432,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = editPlaylistId.value;
     const formData = {
       title: editPlaylistTitle.value.trim(),
-      playlist_date: editPlaylistDate.value,
       url: editPlaylistUrl.value.trim(),
       description: editPlaylistDescription.value.trim()
     };
