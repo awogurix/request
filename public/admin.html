@@ -230,6 +230,19 @@
               </div>
 
               <div class="form-group">
+                <label for="playlistDate" class="form-label">プレイリスト日付（任意）</label>
+                <input 
+                  type="date" 
+                  id="playlistDate" 
+                  name="playlist_date" 
+                  class="form-input"
+                >
+                <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                  プレイリストの配信日や公開日を設定できます
+                </div>
+              </div>
+
+              <div class="form-group">
                 <label for="playlistUrl" class="form-label required">URL</label>
                 <input 
                   type="url" 
@@ -497,6 +510,17 @@
           >
         </div>
         <div class="form-group">
+          <label for="editPlaylistDate" class="form-label">プレイリスト日付（任意）</label>
+          <input 
+            type="date" 
+            id="editPlaylistDate" 
+            class="form-input"
+          >
+          <div style="color: #666; font-size: 12px; margin-top: 5px;">
+            プレイリストの配信日や公開日を設定できます
+          </div>
+        </div>
+        <div class="form-group">
           <label for="editPlaylistUrl" class="form-label required">URL</label>
           <input 
             type="url" 
@@ -526,7 +550,7 @@
     </div>
   </div>
 
-  <script src="/js/admin.js?v=109"></script>
+  <script src="/js/admin.js?v=110"></script>
   <script>
     // Service Worker を完全に削除
     if ('serviceWorker' in navigator) {
