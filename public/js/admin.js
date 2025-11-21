@@ -470,34 +470,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextBroadcastForm = document.getElementById('nextBroadcastForm');
   const nextThemeInput = document.getElementById('nextThemeInput');
   const nextTimeInput = document.getElementById('nextTimeInput');
-  const nextTimePeriod = document.getElementById('nextTimePeriod');
-  const nextPeriodDate = document.getElementById('nextPeriodDate');
-  const timeTypeDateTime = document.getElementById('timeTypeDateTime');
-  const timeTypePeriod = document.getElementById('timeTypePeriod');
-  const dateTimeInput = document.getElementById('dateTimeInput');
-  const periodInput = document.getElementById('periodInput');
   const broadcastSuccess = document.getElementById('broadcastSuccess');
   const broadcastError = document.getElementById('broadcastError');
   const broadcastErrorText = document.getElementById('broadcastErrorText');
-
-  // 時間設定タイプの切り替え
-  if (timeTypeDateTime && timeTypePeriod) {
-    timeTypeDateTime.addEventListener('change', () => {
-      if (timeTypeDateTime.checked) {
-        dateTimeInput.style.display = 'block';
-        periodInput.style.display = 'none';
-        nextTimePeriod.value = '';
-      }
-    });
-    
-    timeTypePeriod.addEventListener('change', () => {
-      if (timeTypePeriod.checked) {
-        dateTimeInput.style.display = 'none';
-        periodInput.style.display = 'block';
-        nextTimeInput.value = '';
-      }
-    });
-  }
 
   // 次回配信情報を読み込み
   async function loadNextBroadcastInfo() {
@@ -505,33 +480,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/settings/next-broadcast');
       const data = await response.json();
       
-      nextThemeInput.value = data.theme || '';
-      
-      // 時間データの判定（ISO形式か時間帯か）
-      if (data.time) {
-        const timePeriods = ['朝', '昼', '夕方', '夜', '深夜'];
-        
-        // 「日付|時間帯」形式かチェック
-        if (data.time.includes('|')) {
-          const [date, period] = data.time.split('|');
-          timeTypePeriod.checked = true;
-          dateTimeInput.style.display = 'none';
-          periodInput.style.display = 'block';
-          nextPeriodDate.value = date;
-          nextTimePeriod.value = period;
-        } else if (timePeriods.includes(data.time)) {
-          // 時間帯のみ（互換性のため）
-          timeTypePeriod.checked = true;
-          dateTimeInput.style.display = 'none';
-          periodInput.style.display = 'block';
-          nextTimePeriod.value = data.time;
-        } else {
-          // 日時（datetime-local形式）
-          timeTypeDateTime.checked = true;
-          dateTimeInput.style.display = 'block';
-          periodInput.style.display = 'none';
-          nextTimeInput.value = data.time;
-        }
+      if (nextThemeInput) {
+        nextThemeInput.value = data.theme || '';
+      }
+      if (nextTimeInput && data.time) {
+        nextTimeInput.value = data.time;
       }
     } catch (error) {
       console.error('次回配信情報取得エラー:', error);
@@ -546,23 +499,6 @@ document.addEventListener('DOMContentLoaded', () => {
       broadcastSuccess.style.display = 'none';
       broadcastError.style.display = 'none';
       
-      // 選択されている時間タイプに応じてデータを取得
-      let timeValue = '';
-      if (timeTypeDateTime.checked) {
-        timeValue = nextTimeInput.value.trim();
-      } else if (timeTypePeriod.checked) {
-        const period = nextTimePeriod.value;
-        const date = nextPeriodDate.value;
-        
-        // 日付と時間帯の両方がある場合は「日付|時間帯」形式で結合
-        if (date && period) {
-          timeValue = `${date}|${period}`;
-        } else if (period) {
-          // 時間帯のみ（互換性のため）
-          timeValue = period;
-        }
-      }
-      
       try {
         const response = await fetch('/api/admin/settings/next-broadcast', {
           method: 'POST',
@@ -571,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
           },
           body: JSON.stringify({
             theme: nextThemeInput.value.trim(),
-            time: timeValue
+            time: nextTimeInput.value.trim()
           })
         });
         
